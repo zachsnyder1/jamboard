@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
 
     // print info about program to terminal
     printf("\n\tJAMBOARD WAVETABLE SYNTHESIS");
-    printf("\ntype 'z' and hit RETURN for operating info (you will need to widen your terminal window)");
+    printf("\ntype 'z' and hit RETURN for operating info");
     printf("\ntype 'x' and hit RETURN to exit program");
 
 	// sine wave table created
@@ -192,12 +192,18 @@ int main(int argc, char *argv[])
     				break;
                 case 'z':
                     printf("To enter a command type its letter and hit RETURN. ");
-                    printf("Each command is one symbol long.  Don't include quotations.\n\n");
-                    printf("                                   SCHEMATIC OF KEYBOARD:\n");
-                    printf("-----------------KEYS---------------------- <=|=> ----------CORRESPONDING NOTES------------\n");
+                    printf("Each command is one symbol long.  Don't include quotations.\n\n\n");
+                    printf("         SCHEMATIC OF KEYBOARD:\n\n");
+                    printf("---------------- KEYS: -----------------------|\n");
                     printf("                                              |\n");
-                    printf("[`][1]   [2] [3]   [4]   [5] [6]   [7]   [8]  |  [g#][a]   [b] [c]   [d]   [e] [f]   [g]   [a]\n");
-                    printf("      [q]       [e]   [r]       [y]   [u]     |         [a#]      [c#]  [d#]      [f#]  [g#]\n\n\n");
+                    printf("[`][1]   [2] [3]   [4]   [5] [6]   [7]   [8]  |\n");
+                    printf("      [q]       [e]   [r]       [y]   [u]     |\n");
+                    printf("                                              |\n");
+                    printf("----------- CORRESPONDING NOTES: -------------|\n");
+                    printf("                                              |\n");
+                    printf("[g#][a]   [b] [c]   [d]   [e] [f]   [g]   [a] |\n");
+                    printf("       [a#]      [c#]  [d#]      [f#]  [g#]   |\n");
+                    printf("______________________________________________|\n\n\n");
                     printf("   OTHER COMMANDS:\n   --------------\n     -   --->  Go down an octave\n");
                     printf("     =   --->  Go up an octave (if it were '+' you would have to type shift...)\n");
                     printf("     z   --->  Print operation info to terminal\n     x   --->  EXIT PROGRAM\n\n");
@@ -262,12 +268,18 @@ int main(int argc, char *argv[])
     				break;
                 case 'z':
                     printf("To enter a command type its letter and hit RETURN. ");
-                    printf("Each command is one symbol long.  Don't include quotations.\n\n");
-                    printf("                                   SCHEMATIC OF KEYBOARD:\n");
-                    printf("-----------------KEYS---------------------- <=|=> ----------CORRESPONDING NOTES------------\n");
+                    printf("Each command is one symbol long.  Don't include quotations.\n\n\n");
+                    printf("         SCHEMATIC OF KEYBOARD:\n\n");
+                    printf("---------------- KEYS: -----------------------|\n");
                     printf("                                              |\n");
-                    printf("[`][1]   [2] [3]   [4]   [5] [6]   [7]   [8]  |  [g#][a]   [b] [c]   [d]   [e] [f]   [g]   [a]\n");
-                    printf("      [q]       [e]   [r]       [y]   [u]     |         [a#]      [c#]  [d#]      [f#]  [g#]\n\n\n");
+                    printf("[`][1]   [2] [3]   [4]   [5] [6]   [7]   [8]  |\n");
+                    printf("      [q]       [e]   [r]       [y]   [u]     |\n");
+                    printf("                                              |\n");
+                    printf("----------- CORRESPONDING NOTES: -------------|\n");
+                    printf("                                              |\n");
+                    printf("[g#][a]   [b] [c]   [d]   [e] [f]   [g]   [a] |\n");
+                    printf("       [a#]      [c#]  [d#]      [f#]  [g#]   |\n");
+                    printf("______________________________________________|\n\n\n");
                     printf("   OTHER COMMANDS:\n   --------------\n     -   --->  Go down an octave\n");
                     printf("     =   --->  Go up an octave (if it were '+' you would have to type shift...)\n");
                     printf("     z   --->  Print operation info to terminal\n     x   --->  EXIT PROGRAM\n\n");
@@ -332,12 +344,18 @@ int main(int argc, char *argv[])
     				break;
                 case 'z':
                     printf("To enter a command type its letter and hit RETURN. ");
-                    printf("Each command is one symbol long.  Don't include quotations.\n\n");
-                    printf("                                   SCHEMATIC OF KEYBOARD:\n");
-                    printf("-----------------KEYS---------------------- <=|=> ----------CORRESPONDING NOTES------------\n");
+                    printf("Each command is one symbol long.  Don't include quotations.\n\n\n");
+                    printf("         SCHEMATIC OF KEYBOARD:\n\n");
+                    printf("---------------- KEYS: -----------------------|\n");
                     printf("                                              |\n");
-                    printf("[`][1]   [2] [3]   [4]   [5] [6]   [7]   [8]  |  [g#][a]   [b] [c]   [d]   [e] [f]   [g]   [a]\n");
-                    printf("      [q]       [e]   [r]       [y]   [u]     |         [a#]      [c#]  [d#]      [f#]  [g#]\n\n\n");
+                    printf("[`][1]   [2] [3]   [4]   [5] [6]   [7]   [8]  |\n");
+                    printf("      [q]       [e]   [r]       [y]   [u]     |\n");
+                    printf("                                              |\n");
+                    printf("----------- CORRESPONDING NOTES: -------------|\n");
+                    printf("                                              |\n");
+                    printf("[g#][a]   [b] [c]   [d]   [e] [f]   [g]   [a] |\n");
+                    printf("       [a#]      [c#]  [d#]      [f#]  [g#]   |\n");
+                    printf("______________________________________________|\n\n\n");
                     printf("   OTHER COMMANDS:\n   --------------\n     -   --->  Go down an octave\n");
                     printf("     =   --->  Go up an octave (if it were '+' you would have to type shift...)\n");
                     printf("     z   --->  Print operation info to terminal\n     x   --->  EXIT PROGRAM\n\n");
