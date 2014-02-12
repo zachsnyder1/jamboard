@@ -4,12 +4,72 @@ JAMBOARD
 OVERVIEW
 
 This is a simple wavetable synthesizer that allows you to play a monophonic
-sine wave melody using the keys on your keyboard.  The pitch ranges three
-octaves from A-110 to A-880.  When the program initiates, it begins by
-playing A-220, and then provides a prompt ('>> ') for commands, including
-note changes.  To enter a command, type it and then hit RETURN.  The notes
-of the octave you are in are organized based on the number keys of your
-keyboard.  1 is the lowest A in the octave, and 8 is A one octave higher.
+sine wave melody using the keys on your keyboard.  The pitch ranges five
+octaves from A-55 to A-1760.  There are two modes:
+
+   1) Continuous sine wave--
+          A sine wave sounds at a fixed amplitude; you can only
+          change the pitch.  This mode sounds more musical because the pitch
+          can be changed quickly.  To enter this mode, execute
+
+                   ./jamboard
+
+          with no additional command line arguments from the directory where
+          you compiled to.
+
+   2) Envelope control--
+          Attack, decay, and release are set using command line arguments.
+          Notes are played sequentially, with no overlap of the envelopes
+          of adjacent notes.  This makes the melody very slow and lacking
+          in rhythm, but I will be expanding the capabilities of this mode.
+
+          There are 6 additional command line arguments:
+            1] 'initial' -> The initial amplitude value (as a percentage of
+                         maximum possible amplitude)
+            2] 'peak'    -> The peak amplitude value (as a percentage of
+                         maximum possible amplitude)
+            3] 'sustain' -> The sustained amplitude value (as a percentage of
+                         maximum possible amplitude)
+            4] 'attack'  -> Relative length of attack (values of 1-6 are
+                            appropriate, where higher value = longer attack)
+            5] 'decay'   -> Relative length of decay (values of 1-6 are
+                            appropriate, where higher value = longer decay)
+            6] 'release' -> Relative length of release (values of 1-6 are
+                            appropriate, where higher value = longer release)
+
+          Example:
+
+             ./jamboard 0 100 30 1 1 1
+
+                        ^  ^  ^  ^ ^ ^
+                        |  |  |  | | |
+                       /  /   |   \ \ \
+                      /  /    |    \ \ \
+                     /  /     |     \ \ \
+                    /  /      |      | \ \
+                   /  /       |      |  \ \
+                  /  /        |      |   \ \
+                 /   |        |      |    \ \
+                /    |        |      |     \ \
+               /     |        |      |      \ \
+              /      |        |      |       \ \
+             /       |        |      |       |  \
+            /        |        |      |       |   \
+           |         |        |      |       |    \_____
+           |         |        |      |       |         |
+           v         v        v      v       v         v
+       'initial'  'peak'   'sus.' 'attack' 'decay'  'release'
+
+
+
+COMMANDS
+
+When the program initiates it provides a prompt ('>> ').  This is where you
+enter all commands, including note changes.  To enter a command, type it and
+then hit RETURN.
+
+The notes of the octave you are in are organized based on the number keys of
+your keyboard.  1 is the lowest A in the octave, and 8 is A one octave higher.
 The numbers in-between 1 and 8 each correspond to the associated degree
 of the A-min scale (e.g. 3 is the C above 1).  Notes not in the scale
 are represented by the ASCII key directly below and between the number keys
@@ -38,28 +98,13 @@ ______________________________________________|
 
 
 
-COMPILING
-
-When compiling, you must include an option for searching the 'portaudio'
-library.  Otherwise you will get an 'undefined symbols for architecture
-x86_64' error, telling you that all the PortAudio functions in the script
-are undefined.  If you use the gcc, compile like this:
-
-	gcc melodyARG.c -lportaudio -o melodyARG
-
-To execute from the same directory, enter the following:
-
-        ./jamboard
-
-
-
 PORTAUDIO DEPENDENCY
 
-It is written using the PortAudio API, so you will need to download and install
+This program is written using the PortAudio API, so you will need to download and install
 pa_stable_v19_20140130.tgz from the PortAudio website if you do not already
 have it:
 
-	http://portaudio.com/download.html
+        http://portaudio.com/download.html
 
 This version of PortAudio in turn depends on the Mac 10.4 SDK, which was part
 of Xcode 3, but has since been superseded.  As far as I know, Apple does not
@@ -69,16 +114,14 @@ right SDK.
 
 
 
-!!!WARNING!!!
+COMPILING
 
-Before the program terminates a 'click' sound is created in the audio stream.
-Likewise, a click is created at the beginning of the next audio stream that is
-initiated on your computer after the execution of this program. Clicks and other
-sounds that contain high-amplitude high-frequency harmonics can damage speakers
-over time.  I would not recommend playing this program through speakers that you
-care very much about.  I use my computer speakers, but you should decide for
-yourself what speakers/headphones to use, if you are comfortable using any at
-all.
+When compiling, you must include an option for searching the 'portaudio'
+library.  Otherwise you will get an 'undefined symbols for architecture
+x86_64' error, telling you that all the PortAudio functions in the script
+are undefined.  If you use the gcc, compile like this:
+
+	      gcc melodyARG.c -lportaudio -o melodyARG
 
 
 
