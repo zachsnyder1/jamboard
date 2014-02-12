@@ -16,8 +16,8 @@
 #define M_PI (3.14159265)
 #endif
 
-// Define base pitches so that the pitch can be calculated for any note in any octave
-// using the relatively simple switch board in main().
+/* Define base pitches so that the pitch can be calculated for any note in any octave
+   using the relatively simple switch board in each engine. */
 static float baseHZ[] = {27.5, 29.14, 30.87, 32.7, 34.65, 36.71, 38.89, 41.2, 43.65, 46.25, 49, 51.91};
 
 // define the struct used to pass user data into the callback function
@@ -33,7 +33,7 @@ paTestData;
 // define the struct used to hold envelope info
 typedef struct
 {
-    // needed to initiate envelope during execution
+    // for scaling magnitude of the envelope transitions
     float initial;
     float peak;
     float sustain;
@@ -44,10 +44,10 @@ typedef struct
 }
 envelopeData;
 
-// This is the callback function which is called repeatedly by portaudio,
-// it is what actually drives the audio stream.  Every time it is called
-// it sends another set of frames to the output buffer.  When the buffer
-// filled it is called again, until something stops the stream.
+/* This is the callback function which is called repeatedly by portaudio,
+   it is what actually drives the audio stream.  Every time it is called
+   it sends another set of frames to the output buffer.  When the buffer
+   filled it is called again, until something stops the stream. */
 static int jamboardCallback(const void *inputBuffer, void *outputBuffer,
                           unsigned long framesPerBuffer,
                           const PaStreamCallbackTimeInfo *timeInfo,
@@ -83,6 +83,42 @@ static int jamboardCallback(const void *inputBuffer, void *outputBuffer,
     return paContinue;
 }
 
+int Init_EnvelopeSettings(envelopeData *envData, int argc, char *argv[])
+{
+    // set up pointers
+    envelopeData *envelope_settings = envData;
+
+    // check that envelope parameters are in correct range (0<arg<100)
+    if(atoi(argv[1]) > 100 || atoi(argv[2]) > 100 || atoi(argv[3]) > 100) {
+        printf("\nERROR: Envelope settings need to be 0 <= X <= 100\n\n");
+        return 1;
+    }
+    if(atoi(argv[1]) < 0 || atoi(argv[2]) < 0 || atoi(argv[3]) < 0) {
+        printf("\nERROR: Envelope settings need to be 0 <= X <= 100\n\n");
+        return 1;
+    }
+    if(atoi(argv[4]) > 100 || atoi(argv[5]) > 100 || atoi(argv[6]) > 100) {
+        printf("\nERROR: Envelope settings need to be 0 <= X <= 100\n\n");
+        return 1;
+    }
+    if(atoi(argv[4]) < 0 || atoi(argv[5]) < 0 || atoi(argv[6]) < 0) {
+        printf("\nERROR: Envelope settings need to be 0 <= X <= 100\n\n");
+        return 1;
+    }
+
+    // set up envelope data from command line arguments
+    envelope_settings->initial = ((float)(atoi(argv[1])) / 100);
+    envelope_settings->peak = ((float)(atoi(argv[2])) / 100);
+    envelope_settings->sustain = ((float)(atoi(argv[3])) / 100);
+    envelope_settings->attack = 1 / (double)(atoi(argv[4]) * 500000);
+    envelope_settings->decay = 1 / (double)(atoi(argv[5]) * 500000);
+    envelope_settings->release = 1 / (double)(atoi(argv[6]) * 500000);
+
+    return 0;
+}
+
+/* This function processes the envelope of each note by modulating the amplitude
+   according to the envelope arguments. */
 void Envelope(paTestData *userData, envelopeData *envData)
 {
     // set up struct pointers
@@ -112,6 +148,261 @@ void Envelope(paTestData *userData, envelopeData *envData)
     return;
 }
 
+/* The engines prompt for and process user commands. */
+
+// This engine is used if envelope arguments were included on the command line
+void Engine_withEnvelope(paTestData *userData, envelopeData *envData)
+{
+    // set up struct pointers
+    paTestData *data = userData;
+    envelopeData *envelope_settings = envData;
+
+    char ch;
+    int loop = 1;
+    int octave = 3;
+    int x = 0;
+
+    // print engine info
+    printf("ENGINE INITIATED: with envelope\nJAM AWAY\n\n");
+    // this loop continues to ask for user input, and executes user commands
+    while(loop) {
+        // print the prompt
+        printf(">> ");
+        ch = getc(stdin);
+        getc(stdin); // eats <RETURN>
+        switch(ch) {
+            case '`':
+                data->pitchIncrementer = (baseHZ[11] * pow((double)2, (double)(octave-1))) / 110;
+                Envelope(data, envelope_settings);
+                break;
+            case '1':
+                data->pitchIncrementer = (baseHZ[0] * pow((double)2, (double)octave)) / 110;
+                 Envelope(data, envelope_settings);
+                break;
+            case 'q':
+                data->pitchIncrementer = (baseHZ[1] * pow((double)2, (double)octave)) / 110;
+                Envelope(data, envelope_settings);
+                break;
+            case '2':
+                data->pitchIncrementer = (baseHZ[2] * pow((double)2, (double)octave)) / 110;
+                Envelope(data, envelope_settings);
+                break;
+            case '3':
+                data->pitchIncrementer = (baseHZ[3] * pow((double)2, (double)octave)) / 110;
+                Envelope(data, envelope_settings);
+                break;
+            case 'e':
+                data->pitchIncrementer = (baseHZ[4] * pow((double)2, (double)octave)) / 110;
+                Envelope(data, envelope_settings);
+                break;
+            case '4':
+                data->pitchIncrementer = (baseHZ[5] * pow((double)2, (double)octave)) / 110;
+                Envelope(data, envelope_settings);
+                break;
+            case 'r':
+                data->pitchIncrementer = (baseHZ[6] * pow((double)2, (double)octave)) / 110;
+                Envelope(data, envelope_settings);
+                break;
+            case '5':
+                data->pitchIncrementer = (baseHZ[7] * pow((double)2, (double)octave)) / 110;
+                Envelope(data, envelope_settings);
+                break;
+            case '6':
+                data->pitchIncrementer = (baseHZ[8] * pow((double)2, (double)octave)) / 110;
+                Envelope(data, envelope_settings);
+                break;
+            case 'y':
+                data->pitchIncrementer = (baseHZ[9] * pow((double)2, (double)octave)) / 110;
+                Envelope(data, envelope_settings);
+                break;
+            case '7':
+                data->pitchIncrementer = (baseHZ[10] * pow((double)2, (double)octave)) / 110;
+                Envelope(data, envelope_settings);
+                break;
+            case 'u':
+                data->pitchIncrementer = (baseHZ[11] * pow((double)2, (double)octave)) / 110;
+                Envelope(data, envelope_settings);
+                break;
+            case '8':
+                data->pitchIncrementer = (baseHZ[0] * pow((double)2, (double)(octave+1))) / 110;
+                Envelope(data, envelope_settings);
+                break;
+            case '-':
+                if(octave == 1) {
+                    printf("Already at lowest octave");
+                    break;
+                } else {
+                    octave--;
+                    printf("Octave: %d\n", octave);
+                    break;
+                }
+            case '=':
+                if(octave == 5) {
+                    printf("Already at highest octave");
+                    break;
+                } else {
+                    octave++;
+                    printf("Octave: %d\n", octave);
+                    break;
+                }
+            case 'z':
+                printf("To enter a command type its letter and hit RETURN. ");
+                printf("Each command is one symbol long.  Don't include quotations.\n\n\n");
+                printf("         SCHEMATIC OF KEYBOARD:\n\n");
+                printf("---------------- KEYS: -----------------------|\n");
+                printf("                                              |\n");
+                printf("[`][1]   [2] [3]   [4]   [5] [6]   [7]   [8]  |\n");
+                printf("      [q]       [e]   [r]       [y]   [u]     |\n");
+                printf("                                              |\n");
+                printf("----------- CORRESPONDING NOTES: -------------|\n");
+                printf("                                              |\n");
+                printf("[g#][a]   [b] [c]   [d]   [e] [f]   [g]   [a] |\n");
+                printf("       [a#]      [c#]  [d#]      [f#]  [g#]   |\n");
+                printf("______________________________________________|\n\n\n");
+                printf("   OTHER COMMANDS:\n   --------------\n     -   --->  Go down an octave\n");
+                printf("     =   --->  Go up an octave (if it were '+' you would have to type shift...)\n");
+                printf("     z   --->  Print operation info to terminal\n     x   --->  EXIT PROGRAM\n\n");
+                break;
+            case 'x':
+                loop=0;
+                break;
+
+            default:
+                printf("NOT A NOTE!\n");
+        }
+    }
+
+    return;
+}
+
+void Engine_withoutEnvelope(paTestData *userData, envelopeData *envData)
+{
+    // set up struct pointers
+    paTestData *data = userData;
+    envelopeData *eData = envData;
+
+    char ch;
+    int loop = 1;
+    int octave = 3;
+    int x = 0;
+
+    // print engine info
+    printf("ENGINE INITIATED: without envelope\nJAM AWAY\n\n");
+    // this loop continues to ask for user input, and executes user commands
+    while(loop) {
+        // print the prompt
+        printf(">> ");
+        ch = getc(stdin);
+        getc(stdin); // eats <RETURN>
+        // used to fade in signal on first note, in order to prevent damage to speakers
+        if(x == 0) {
+            data->amplitudeScaling = 0;
+        }
+        switch(ch) {
+            case '`':
+                data->pitchIncrementer = (baseHZ[11] * pow((double)2, (double)(octave-1))) / 110;
+                break;
+            case '1':
+                data->pitchIncrementer = (baseHZ[0] * pow((double)2, (double)octave)) / 110;
+                break;
+            case 'q':
+                data->pitchIncrementer = (baseHZ[1] * pow((double)2, (double)octave)) / 110;
+                break;
+            case '2':
+                data->pitchIncrementer = (baseHZ[2] * pow((double)2, (double)octave)) / 110;
+                break;
+            case '3':
+                data->pitchIncrementer = (baseHZ[3] * pow((double)2, (double)octave)) / 110;
+                break;
+            case 'e':
+                data->pitchIncrementer = (baseHZ[4] * pow((double)2, (double)octave)) / 110;
+                break;
+            case '4':
+                data->pitchIncrementer = (baseHZ[5] * pow((double)2, (double)octave)) / 110;
+                break;
+            case 'r':
+                data->pitchIncrementer = (baseHZ[6] * pow((double)2, (double)octave)) / 110;
+                break;
+            case '5':
+                data->pitchIncrementer = (baseHZ[7] * pow((double)2, (double)octave)) / 110;
+                break;
+            case '6':
+                data->pitchIncrementer = (baseHZ[8] * pow((double)2, (double)octave)) / 110;
+                break;
+            case 'y':
+                data->pitchIncrementer = (baseHZ[9] * pow((double)2, (double)octave)) / 110;
+                break;
+            case '7':
+                data->pitchIncrementer = (baseHZ[10] * pow((double)2, (double)octave)) / 110;
+                break;
+            case 'u':
+                data->pitchIncrementer = (baseHZ[11] * pow((double)2, (double)octave)) / 110;
+                break;
+            case '8':
+                data->pitchIncrementer = (baseHZ[0] * pow((double)2, (double)(octave+1))) / 110;
+                break;
+            case '-':
+                if(octave == 1) {
+                    printf("Already at lowest octave");
+                    break;
+                } else {
+                    octave--;
+                    printf("Octave: %d\n", octave);
+                    break;
+                }
+            case '=':
+                if(octave == 5) {
+                    printf("Already at highest octave");
+                    break;
+                } else {
+                    octave++;
+                    printf("Octave: %d\n", octave);
+                    break;
+                }
+            case 'z':
+                printf("To enter a command type its letter and hit RETURN. ");
+                printf("Each command is one symbol long.  Don't include quotations.\n\n\n");
+                printf("         SCHEMATIC OF KEYBOARD:\n\n");
+                printf("---------------- KEYS: -----------------------|\n");
+                printf("                                              |\n");
+                printf("[`][1]   [2] [3]   [4]   [5] [6]   [7]   [8]  |\n");
+                printf("      [q]       [e]   [r]       [y]   [u]     |\n");
+                printf("                                              |\n");
+                printf("----------- CORRESPONDING NOTES: -------------|\n");
+                printf("                                              |\n");
+                printf("[g#][a]   [b] [c]   [d]   [e] [f]   [g]   [a] |\n");
+                printf("       [a#]      [c#]  [d#]      [f#]  [g#]   |\n");
+                printf("______________________________________________|\n\n\n");
+                printf("   OTHER COMMANDS:\n   --------------\n     -   --->  Go down an octave\n");
+                printf("     =   --->  Go up an octave (if it were '+' you would have to type shift...)\n");
+                printf("     z   --->  Print operation info to terminal\n     x   --->  EXIT PROGRAM\n\n");
+                break;
+            case 'x':
+                // stops the while loop
+                loop=0;
+                // fades out amplitude to avoid damage to speakers
+                for(data->amplitudeScaling = data->amplitudeScaling; data->amplitudeScaling > 0; data->amplitudeScaling -= 0.000005) {
+                    Pa_Sleep(0);
+                }
+                x++;
+                break;
+
+            default:
+                printf("NOT A NOTE!\n");
+        }
+        // fade-in on first note occurs here
+        if(x == 0) {
+            for(data->amplitudeScaling = 0; data->amplitudeScaling < 1; data->amplitudeScaling += 0.000005) {
+                    Pa_Sleep(0);
+                }
+        }
+        // increment x so that fade-in only occurs on first note
+        x++;
+    }
+
+    return;
+}
+
 int main(int argc, char *argv[])
 {
     // set up some variables
@@ -119,49 +410,36 @@ int main(int argc, char *argv[])
     PaStream *stream; // open stream
     PaError err; // err is used for error handling
     paTestData data; // create user data structure
-    envelopeData envelope_settings; // create envelope data structure
     int x;
-    int loop;
-    char ch;
-    int octave;
 
-    // check if envelope arguments were included on command line
-    if(argc != 7) {
+    /* DETERMINE MODE, SKIP TO APPROPRIATE ROUTINE */
+    if(argc == 7) {
+        goto EnvelopeInit;
+    } else if(argc == 1) {
         goto skipEnvelop;
+    } else {
+        printf("\t\t>>>INCORRECT NUMBER OF ARGUMENTS<<<\n\n");
+        printf("OPTIONS:\n\n");
+        printf("./jamboard\n\t---> continuous sine wave mode <---\n\n");
+        printf("./jamboard (initial) (peak) (sustain) (attack) (decay) (release)\n\t");
+        printf("---> envelope control mode <---\n\n\n");
+        return 0;
     }
 
-    // check that envelope parameters are in correct range
-    if(atoi(argv[1]) > 100 || atoi(argv[2]) > 100 || atoi(argv[3]) > 100) {
-        printf("\nEnvelope settings need to be 0 <= X <= 100\n\n");
-        goto error;
-    }
-    if(atoi(argv[1]) < 0 || atoi(argv[2]) < 0 || atoi(argv[3]) < 0) {
-        printf("\nEnvelope settings need to be 0 <= X <= 100\n\n");
-        goto error;
-    }
-    if(atoi(argv[4]) > 100 || atoi(argv[5]) > 100 || atoi(argv[6]) > 100) {
-        printf("\nEnvelope settings need to be 0 <= X <= 100\n\n");
-        goto error;
-    }
-    if(atoi(argv[4]) < 0 || atoi(argv[5]) < 0 || atoi(argv[6]) < 0) {
-        printf("\nEnvelope settings need to be 0 <= X <= 100\n\n");
-        goto error;
-    }
+/* SET ARGUMENTS FOR ENVELOPE CONTROL IF THEY WERE INCLUDED */
+EnvelopeInit:
 
-    // set up envelope data from command line arguments
-    envelope_settings.initial = ((float)(atoi(argv[1])) / 100);
-    envelope_settings.peak = ((float)(atoi(argv[2])) / 100);
-    envelope_settings.sustain = ((float)(atoi(argv[3])) / 100);
-    envelope_settings.attack = 1 / (double)(atoi(argv[4]) * 500000);
-    envelope_settings.decay = 1 / (double)(atoi(argv[5]) * 500000);
-    envelope_settings.release = 1 / (double)(atoi(argv[6]) * 500000);
+    printf(""); // For some reason I need a function here or the compiler yells at me
+    envelopeData envelope_settings; // create envelope data structure
+    if(Init_EnvelopeSettings(&envelope_settings, argc, argv) == 1) return 0;
 
-// so that a seg fault does not occur if envelope arguments are not included
+/* SKIP TO HERE IF ENVELOPE ARGUMENTS WERE NOT INCLUDED */
 skipEnvelop:
-    // start note has no amplitude
-    data.amplitudeScaling = 0;
-    // start the stream with a note to avoid a segmentation fault
-    data.pitchIncrementer = 2.0275;
+
+    // Amplitude and pitch are set to avoid a segmentation fault:
+    data.amplitudeScaling = 0; // start note has no amplitude
+    data.pitchIncrementer = 2.0275; // starting pitch is A-220
+
     // sine wave table created
     for(x=0; x<TABLE_SIZE; x++)
         {
@@ -201,229 +479,14 @@ skipEnvelop:
     if(err != paNoError) goto error;
 
     // print indication that program is initiated
-    printf("\n\nSTREAM OPEN\nJAM AWAY\n\n");
-    // set octave value for loop
-    octave = 3;
-    // set up loop value
-    loop = 1;
-    // used to fade in signal only on first loop
-    x = 0;
-    // this loop continues to ask for user input, and executes user commands
-    while(loop) {
-        // print the prompt
-        printf(">> ");
-        ch = getc(stdin);
-        getc(stdin); // eats <RETURN>
-        // these 'if' statements cause note commands to switch to notes in
-        // the current octave
-        if(argc == 7) {
-            switch(ch) {
-                case '`':
-                    data.pitchIncrementer = (baseHZ[11] * pow((double)2, (double)(octave-1))) / 110;
-                    Envelope(&data, &envelope_settings);
-                    break;
-                case '1':
-                    data.pitchIncrementer = (baseHZ[0] * pow((double)2, (double)octave)) / 110;
-                    Envelope(&data, &envelope_settings);
-                    break;
-                case 'q':
-                    data.pitchIncrementer = (baseHZ[1] * pow((double)2, (double)octave)) / 110;
-                    Envelope(&data, &envelope_settings);
-                    break;
-                case '2':
-                    data.pitchIncrementer = (baseHZ[2] * pow((double)2, (double)octave)) / 110;
-                    Envelope(&data, &envelope_settings);
-                    break;
-                case '3':
-                    data.pitchIncrementer = (baseHZ[3] * pow((double)2, (double)octave)) / 110;
-                    Envelope(&data, &envelope_settings);
-                    break;
-                case 'e':
-                    data.pitchIncrementer = (baseHZ[4] * pow((double)2, (double)octave)) / 110;
-                    Envelope(&data, &envelope_settings);
-                    break;
-                case '4':
-                    data.pitchIncrementer = (baseHZ[5] * pow((double)2, (double)octave)) / 110;
-                    Envelope(&data, &envelope_settings);
-                    break;
-                case 'r':
-                    data.pitchIncrementer = (baseHZ[6] * pow((double)2, (double)octave)) / 110;
-                    Envelope(&data, &envelope_settings);
-                    break;
-                case '5':
-                    data.pitchIncrementer = (baseHZ[7] * pow((double)2, (double)octave)) / 110;
-                    Envelope(&data, &envelope_settings);
-                    break;
-                case '6':
-                    data.pitchIncrementer = (baseHZ[8] * pow((double)2, (double)octave)) / 110;
-                    Envelope(&data, &envelope_settings);
-                    break;
-                case 'y':
-                    data.pitchIncrementer = (baseHZ[9] * pow((double)2, (double)octave)) / 110;
-                    Envelope(&data, &envelope_settings);
-                    break;
-                case '7':
-                    data.pitchIncrementer = (baseHZ[10] * pow((double)2, (double)octave)) / 110;
-                    Envelope(&data, &envelope_settings);
-                    break;
-                case 'u':
-                    data.pitchIncrementer = (baseHZ[11] * pow((double)2, (double)octave)) / 110;
-                    Envelope(&data, &envelope_settings);
-                    break;
-                case '8':
-                    data.pitchIncrementer = (baseHZ[0] * pow((double)2, (double)(octave+1))) / 110;
-                    Envelope(&data, &envelope_settings);
-                    break;
-                case '-':
-                    if(octave == 1) {
-                        printf("Already at lowest octave");
-                        break;
-                    } else {
-                        octave--;
-                        printf("Octave: %d\n", octave);
-                        break;
-                    }
-                case '=':
-                    if(octave == 5) {
-                        printf("Already at highest octave");
-                        break;
-                    } else {
-                        octave++;
-                        printf("Octave: %d\n", octave);
-                        break;
-                    }
-                case 'z':
-                    printf("To enter a command type its letter and hit RETURN. ");
-                    printf("Each command is one symbol long.  Don't include quotations.\n\n\n");
-                    printf("         SCHEMATIC OF KEYBOARD:\n\n");
-                    printf("---------------- KEYS: -----------------------|\n");
-                    printf("                                              |\n");
-                    printf("[`][1]   [2] [3]   [4]   [5] [6]   [7]   [8]  |\n");
-                    printf("      [q]       [e]   [r]       [y]   [u]     |\n");
-                    printf("                                              |\n");
-                    printf("----------- CORRESPONDING NOTES: -------------|\n");
-                    printf("                                              |\n");
-                    printf("[g#][a]   [b] [c]   [d]   [e] [f]   [g]   [a] |\n");
-                    printf("       [a#]      [c#]  [d#]      [f#]  [g#]   |\n");
-                    printf("______________________________________________|\n\n\n");
-                    printf("   OTHER COMMANDS:\n   --------------\n     -   --->  Go down an octave\n");
-                    printf("     =   --->  Go up an octave (if it were '+' you would have to type shift...)\n");
-                    printf("     z   --->  Print operation info to terminal\n     x   --->  EXIT PROGRAM\n\n");
-                    break;
-                case 'x':
-                    loop=0;
-                    break;
-
-                default:
-                    printf("NOT A NOTE!\n");
-            } 
-        } else {
-            // used to fade in signal on first note, in order to prevent damage to speakers
-            if(x == 0) {
-                data.amplitudeScaling = 0;
-            }
-            switch(ch) {
-                case '`':
-                    data.pitchIncrementer = (baseHZ[11] * pow((double)2, (double)(octave-1))) / 110;
-                    break;
-                case '1':
-                    data.pitchIncrementer = (baseHZ[0] * pow((double)2, (double)octave)) / 110;
-                    break;
-                case 'q':
-                    data.pitchIncrementer = (baseHZ[1] * pow((double)2, (double)octave)) / 110;
-                    break;
-                case '2':
-                    data.pitchIncrementer = (baseHZ[2] * pow((double)2, (double)octave)) / 110;
-                    break;
-                case '3':
-                    data.pitchIncrementer = (baseHZ[3] * pow((double)2, (double)octave)) / 110;
-                    break;
-                case 'e':
-                    data.pitchIncrementer = (baseHZ[4] * pow((double)2, (double)octave)) / 110;
-                    break;
-                case '4':
-                    data.pitchIncrementer = (baseHZ[5] * pow((double)2, (double)octave)) / 110;
-                    break;
-                case 'r':
-                    data.pitchIncrementer = (baseHZ[6] * pow((double)2, (double)octave)) / 110;
-                    break;
-                case '5':
-                    data.pitchIncrementer = (baseHZ[7] * pow((double)2, (double)octave)) / 110;
-                    break;
-                case '6':
-                    data.pitchIncrementer = (baseHZ[8] * pow((double)2, (double)octave)) / 110;
-                    break;
-                case 'y':
-                    data.pitchIncrementer = (baseHZ[9] * pow((double)2, (double)octave)) / 110;
-                    break;
-                case '7':
-                    data.pitchIncrementer = (baseHZ[10] * pow((double)2, (double)octave)) / 110;
-                    break;
-                case 'u':
-                    data.pitchIncrementer = (baseHZ[11] * pow((double)2, (double)octave)) / 110;
-                    break;
-                case '8':
-                    data.pitchIncrementer = (baseHZ[0] * pow((double)2, (double)(octave+1))) / 110;
-                    break;
-                case '-':
-                    if(octave == 1) {
-                        printf("Already at lowest octave");
-                        break;
-                    } else {
-                        octave--;
-                        printf("Octave: %d\n", octave);
-                        break;
-                    }
-                case '=':
-                    if(octave == 5) {
-                        printf("Already at highest octave");
-                        break;
-                    } else {
-                        octave++;
-                        printf("Octave: %d\n", octave);
-                        break;
-                    }
-                case 'z':
-                    printf("To enter a command type its letter and hit RETURN. ");
-                    printf("Each command is one symbol long.  Don't include quotations.\n\n\n");
-                    printf("         SCHEMATIC OF KEYBOARD:\n\n");
-                    printf("---------------- KEYS: -----------------------|\n");
-                    printf("                                              |\n");
-                    printf("[`][1]   [2] [3]   [4]   [5] [6]   [7]   [8]  |\n");
-                    printf("      [q]       [e]   [r]       [y]   [u]     |\n");
-                    printf("                                              |\n");
-                    printf("----------- CORRESPONDING NOTES: -------------|\n");
-                    printf("                                              |\n");
-                    printf("[g#][a]   [b] [c]   [d]   [e] [f]   [g]   [a] |\n");
-                    printf("       [a#]      [c#]  [d#]      [f#]  [g#]   |\n");
-                    printf("______________________________________________|\n\n\n");
-                    printf("   OTHER COMMANDS:\n   --------------\n     -   --->  Go down an octave\n");
-                    printf("     =   --->  Go up an octave (if it were '+' you would have to type shift...)\n");
-                    printf("     z   --->  Print operation info to terminal\n     x   --->  EXIT PROGRAM\n\n");
-                    break;
-                case 'x':
-                    // stops the while loop
-                    loop=0;
-                    // fades out amplitude to avoid damage to speakers
-                    for(data.amplitudeScaling = 1; data.amplitudeScaling > 0; data.amplitudeScaling -= 0.000005) {
-                        Pa_Sleep(0);
-                    }
-                    break;
-
-                default:
-                    printf("NOT A NOTE!\n");
-            }
-            // fade-in on first note occurs here
-            if(x == 0) {
-                for(data.amplitudeScaling = 0; data.amplitudeScaling < 1; data.amplitudeScaling += 0.000005) {
-                        Pa_Sleep(0);
-                    }
-            }
-            // increment x so that fade-in only occurs on first note
-            x++;
-        }   
+    printf("\n\nSTREAM OPEN\n");
+    // if statement checks mode, starts correct engine
+    if(argc == 7) {
+        Engine_withEnvelope(&data, &envelope_settings);
+    } else if(argc == 1) {
+        Engine_withoutEnvelope(&data, &envelope_settings);
     }
-
+    
     // stream is stopped
     err = Pa_StopStream(stream);
     if(err != paNoError) goto error;
