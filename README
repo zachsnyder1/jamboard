@@ -4,20 +4,51 @@ JAMBOARD
 OVERVIEW
 
 This is a simple wavetable synthesizer that allows you to play a monophonic
-sine wave melody using the keys on your keyboard.  The pitch ranges five
-octaves from A-55 to A-1760.  There are two modes:
+melody using the keys on your keyboard.  The pitch ranges four octaves from
+A-100 to A-1760, and the timbre can be sine wave, square wave, or a custom
+timbre.  There are three modes:
 
-   1) Continuous sine wave--
-          A sine wave sounds at a fixed amplitude; you can only
-          change the pitch.  This mode sounds more musical because the pitch
-          can be changed quickly.  To enter this mode, execute
+   'c'  Continuous sine/square wave mode--
+          A sine/square wave sounds at a fixed amplitude. To enter this mode,
+          execute with 'c' as the mode argument:
 
-                   ./jamboard
+                   ./jamboard c
 
           with no additional command line arguments from the directory where
           you compiled to.
 
-   2) Envelope control--
+   'C'  Custom timbre mode--
+          Similar to 'c' mode, except that you create your own synth sound
+          by setting the relative amplitude (0 <= X <= 100) of each harmonic
+          that is present in the sound, up to the 31st harmonic.  To enter
+          this mode execute with 'C' as the mode argument.  The next argument
+          is the amplitude of the fundamental, and every following argument
+          is the amplitude of the next highest harmonic.
+
+          Example:
+
+                  ./jamboard C 100 60 20 0 0 50
+
+                             ^  ^  ^  ^  ^ ^  ^
+                        _____|  |  |  |  | |  |
+                       /       /  /   |   \ \  \
+                      /       /  /    |    \ \  \
+                     /       /  /     |     \ \  \
+                    v       /  /      |      \ \  \
+                 'mode'    /  /       |       \ \  \
+                          /  /        |        \ \  \
+                         /  /         |         \ \  \
+                        /  /          |         |  \  \
+                       /  /           |         |   \  \
+                      /  /            |         |    \  \
+                     /  /             |         |     \  \
+              ______/  /              |         |      \  \
+             /         |              |         |       \  \____________
+            |          |              |         |        \             |
+            v          v              v         v         v            v
+   'fundamental'  '1st harm.'  '2nd harm.' '3rd harm.' '4th harm.'  '5th harm.'
+
+   'e'  Envelope control mode--
           Attack, decay, and release are set using command line arguments.
           Notes are played sequentially, with no overlap of the envelopes
           of adjacent notes.  This makes the melody very slow and lacking
@@ -39,26 +70,26 @@ octaves from A-55 to A-1760.  There are two modes:
 
           Example:
 
-             ./jamboard 0 100 30 1 1 1
+             ./jamboard e 0 100 30 1 1 1
 
-                        ^  ^  ^  ^ ^ ^
-                        |  |  |  | | |
-                       /  /   |   \ \ \
-                      /  /    |    \ \ \
-                     /  /     |     \ \ \
-                    /  /      |      | \ \
-                   /  /       |      |  \ \
-                  /  /        |      |   \ \
-                 /   |        |      |    \ \
-                /    |        |      |     \ \
-               /     |        |      |      \ \
-              /      |        |      |       \ \
-             /       |        |      |       |  \
-            /        |        |      |       |   \
-           |         |        |      |       |    \_____
-           |         |        |      |       |         |
-           v         v        v      v       v         v
-       'initial'  'peak'   'sus.' 'attack' 'decay'  'release'
+                        ^ ^  ^  ^  ^ ^ ^
+                        | |  |  |  | | |
+                       / /  /   |   \ \ \
+               _______/ /  /    |    \ \ \
+              /        /  /     |     \ \ \
+             V        /  /      |      | \ \
+          'mode'     /  /       |      |  \ \
+                    /  /        |      |   \ \
+                   /   |        |      |    \ \
+                  /    |        |      |     \ \
+                 /     |        |      |      \ \
+                /      |        |      |       \ \
+               /       |        |      |       |  \
+              /        |        |      |       |   \
+             |         |        |      |       |    \_____
+             |         |        |      |       |         |
+             v         v        v      v       v         v
+         'initial'  'peak'   'sus.' 'attack' 'decay'  'release'
 
 
 
@@ -93,6 +124,8 @@ ______________________________________________|
    --------------
      -   --->  Go down an octave
      =   --->  Go up an octave (if it were '+' you would have to type shift...)
+     A   --->  Timbre = sine wave (default in 'c' mode; undefined in 'e' mode)
+     S   --->  Timbre = square wave (undefined in 'e' mode)
      z   --->  Print operation info to terminal
      x   --->  EXIT PROGRAM
 
