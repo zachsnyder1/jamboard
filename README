@@ -3,56 +3,26 @@ JAMBOARD
 
 OVERVIEW
 
-This is a simple wavetable synthesizer that allows you to play a monophonic
-melody using the keys on your keyboard.  The pitch ranges four octaves from
-A-100 to A-1760, and the timbre can be sine wave, square wave, or a custom
-timbre.  There are three modes:
+This is a wavetable synthesizer that allows you to play either a monophonic
+or polyphonic melody using the keys on your keyboard.  The pitch ranges four
+octaves from A-100 to A-1760, and the timbre can be sine wave, square wave,
+or a custom timbre.  There are two modes:
 
-   'c'  Continuous sine/square wave mode--
-          A sine/square wave sounds at a fixed amplitude. To enter this mode,
-          execute with 'c' as the mode argument:
+   'c'  Continuous signal (monophonic) mode--
+          A sine/square wave or customized waveform sounds at a fixed
+          amplitude. To enter this mode, execute with 'c' as the mode argument
 
                    ./jamboard c
 
           with no additional command line arguments from the directory where
           you compiled to.
 
-   'C'  Custom timbre mode--
-          Similar to 'c' mode, except that you create your own synth sound
-          by setting the relative amplitude (0 <= X <= 100) of each harmonic
-          that is present in the sound, up to the 31st harmonic.  To enter
-          this mode execute with 'C' as the mode argument.  The next argument
-          is the amplitude of the fundamental, and every following argument
-          is the amplitude of the next highest harmonic.
-
-          Example:
-
-                  ./jamboard C 100 60 20 0 0 50
-
-                             ^  ^  ^  ^  ^ ^  ^
-                        _____|  |  |  |  | |  |
-                       /       /  /   |   \ \  \
-                      /       /  /    |    \ \  \
-                     /       /  /     |     \ \  \
-                    v       /  /      |      \ \  \
-                 'mode'    /  /       |       \ \  \
-                          /  /        |        \ \  \
-                         /  /         |         \ \  \
-                        /  /          |         |  \  \
-                       /  /           |         |   \  \
-                      /  /            |         |    \  \
-                     /  /             |         |     \  \
-              ______/  /              |         |      \  \
-             /         |              |         |       \  \____________
-            |          |              |         |        \             |
-            v          v              v         v         v            v
-   'fundamental'  '1st harm.'  '2nd harm.' '3rd harm.' '4th harm.'  '5th harm.'
-
-   'e'  Envelope control mode--
+   'e'  Envelope control (polyphonic) mode--
           Attack, decay, and release are set using command line arguments.
-          Notes are played sequentially, with no overlap of the envelopes
-          of adjacent notes.  This makes the melody very slow and lacking
-          in rhythm, but I will be expanding the capabilities of this mode.
+          Up to six notes can sound simultaneously.  If a seventh note is
+          toggled the new note will not sound, and a failure message will
+          be printed to the terminal (but the program will not crash).
+          Timbre can be sine/square wave, or a customized waveform.
 
           There are 6 additional command line arguments:
             1] 'initial' -> The initial amplitude value (as a percentage of
@@ -91,6 +61,10 @@ timbre.  There are three modes:
              v         v        v      v       v         v
          'initial'  'peak'   'sus.' 'attack' 'decay'  'release'
 
+         NOTE: Initial values that are not 0 may cause a clicking sound at the
+               beggining of each note, which isn't the best for your speakers.
+               I strongly recommend using an initial value of 0.
+
 
 
 COMMANDS
@@ -124,11 +98,28 @@ ______________________________________________|
    --------------
      -   --->  Go down an octave
      =   --->  Go up an octave (if it were '+' you would have to type shift...)
-     A   --->  Timbre = sine wave (default in 'c' mode; undefined in 'e' mode)
-     S   --->  Timbre = square wave (undefined in 'e' mode)
+     A   --->  Timbre = sine wave (default)
+     S   --->  Timbre = square wave
+     C   --->  Synthesize custom timbre (SEE BELOW FOR FULL DESCRIPTION)
      z   --->  Print operation info to terminal
      x   --->  EXIT PROGRAM
 
+
+SPECIAL COMMAND: SYNTHESIZE CUSTOM TIMBRE
+
+The 'synthesize custom timbre' function allows you to synthesize a new sound by
+setting the relative amplitude for each harmonic, up to the 31st harmonic.
+Relative amplitudes are values between 0 and 100.  Enter a value for each
+harmonic as you are promted.  A value of 0 means the harmonic is not included
+in the sound.  When you have entered a value for the highest harmonic that you
+want to include, enter 's' (without quotations), and hit RETURN, to synthesize
+the sound.
+
+  LOCAL COMMANDS:
+  --------------
+    z   --->  Print custom synthesis info
+    s   --->  Synthesize waveform
+    x   --->  Abort custom timbre synthesis and return to jam
 
 
 PORTAUDIO DEPENDENCY
@@ -154,7 +145,7 @@ library.  Otherwise you will get an 'undefined symbols for architecture
 x86_64' error, telling you that all the PortAudio functions in the script
 are undefined.  If you use the gcc, compile like this:
 
-	      gcc melodyARG.c -lportaudio -o melodyARG
+	      gcc jamboard.c -lportaudio -o jamboard
 
 
 
