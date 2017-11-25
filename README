@@ -134,16 +134,16 @@ This version of PortAudio in turn depends on the Mac 10.4 SDK, which was part
 of Xcode 3, but has since been superseded.  As far as I know, Apple does not
 provide any legacy SDKs, so this can be hard to find.  However, if you use
 Homebrew to download PortAudio you shouldn't have to worry about finding the
-right SDK.
+right SDK:
+
+        brew install portaudio
 
 
 
 COMPILING
 
-When compiling, you must include an option for searching the 'portaudio'
-library.  Otherwise you will get an 'undefined symbols for architecture
-x86_64' error, telling you that all the PortAudio functions in the script
-are undefined.  If you use the gcc, compile like this:
+When compiling, you may need to explicitly link to the 'portaudio' library.
+If you use the gcc, compile like this:
 
 	      gcc jamboard.c -lportaudio -o jamboard
 
