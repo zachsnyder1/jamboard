@@ -95,18 +95,72 @@ void makeSine(paUserData *data) {
     }
 }
 
+void makeSquare(paUserData *data) {
+    for(int x=0; x < TABLE_SIZE; x++) {
+        if(x < 10) {
+            data->table[x] = 0.005 * (0 + (x * 0.1));
+        }
+        if(9 < x && x < 190) {
+            data->table[x] = 0.005;
+        }
+        if(189 < x && x < 200) {
+            data->table[x] = 0.005 * (1 - ((x-190) * 0.1));
+        }
+        if(199 < x && x < 210) {
+            data->table[x] = 0.005 * (0 - ((x-200) * 0.1));
+        }
+        if(209 < x && x < 390) {
+            data->table[x] = -0.005;
+        }
+        if(389 < x && x < TABLE_SIZE) {
+            data->table[x] = 0.005 * (-1 + ((x-390) * 0.1));
+        }
+    }
+}
+
+void makeCustom(paUserData *data, int hA[]) {
+    float addedAmps_scaling;
+    float added_amplitudes;
+    float temp_table[TABLE_SIZE];
+    int i, x;
+    
+    for(i = 1; i < (HIGHEST_HARMONIC+1); i++) {
+        addedAmps_scaling += hA[i];
+    }
+
+    // harmonics are added together, one wavetable index at a time
+    for(i = 0; i < TABLE_SIZE; i++) {
+        added_amplitudes = 0;
+        for(x = 1; x < (HIGHEST_HARMONIC+1); x++) {
+            added_amplitudes += (((float)hA[x] / 100) *
+                data->table[((x) * i) % TABLE_SIZE]) / ((float)addedAmps_scaling / 100);
+        }
+        temp_table[i] = added_amplitudes;
+    }
+
+    // main wavetable is replaced with data stored in the temporary table
+    for(i = 0; i < TABLE_SIZE; i++) {
+        data->table[i] = temp_table[i];
+    }
+}
+
+void printTable(paUserData *data) {
+    FILE *f = fopen("table.csv", "a");
+    for(int i = 0; i < TABLE_SIZE; i++) {
+        fprintf(f, "%f,", data->table[i]);
+    }
+    fprintf(f, "\n");
+    fclose(f);
+}
+
 // create a custom timbre based on user input
-void create_CustomTimbre(paUserData *data)
+void makeCustomUI(paUserData *data)
 {
     // setup local variables
     int harm_amplitudes[HIGHEST_HARMONIC+2] = {0}; // array for amplitude values of harmonics
     char command_check;
     int loop = 1;
     int x = 0;
-    int i;
-    float addedAmps_scaling;
-    float added_amplitudes;
-    float temp_table[TABLE_SIZE];
 
     // print info to terminal
     printf("\n\t\tSYNTHESIZE A CUSTOM TIMBRE\n\n");
@@ -164,33 +218,8 @@ void create_CustomTimbre(paUserData *data)
             x++;
         }
     }
-
-    /* CREATE NEW WAVE TABLE FROM USER INPUT
-       Overall amplitude of the synthesized waveform is scaled
-       to avoid an arithmetic overflow.
-       NOTE: first item in array kept getting corrupted, so it is
-       ignored in these loops... */
-    for(i = 1; i < (HIGHEST_HARMONIC+1); i++) {
-        addedAmps_scaling += harm_amplitudes[i];
-    }
-
-    // harmonics are added together, one wavetable index at a time
-    for(i = 0; i < TABLE_SIZE; i++) {
-        added_amplitudes = 0;
-        for(x = 1; x < (HIGHEST_HARMONIC+1); x++) {
-            added_amplitudes += (((float)harm_amplitudes[x] / 100) *
-                data->table[((x) * i) % TABLE_SIZE]) / ((float)addedAmps_scaling / 100);
-        }
-        temp_table[i] = added_amplitudes;
-    }
-
-    // main wavetable is replaced with data stored in the temporary table
-    for(i = 0; i < TABLE_SIZE; i++) {
-        data->table[i] = temp_table[i];
-    }
-
-    // eat enter; needed for some reason
     getc(stdin);
+    makeCustom(data, harm_amplitudes);
 
     return;
 }
@@ -214,7 +243,7 @@ void Engine_Monophonic(paUserData *data)
         // print the prompt
         printf(">> ");
         ch = getc(stdin); // gets command letter
-        getc(stdin); // eats <RETURN>
+        getc(stdin); // eats newline
 
         // user command switchboard
         switch(ch) {
@@ -312,50 +341,27 @@ void Engine_Monophonic(paUserData *data)
             case 'S': // CHANGE TO PSEUDO SQUARE WAVE
                 fadeSignalOut(data);
                 // redefine table as square wave
-                for(int x=0; x<TABLE_SIZE; x++) {
-                    if(x < 10) {
-                        data->table[x] = 0.005 * (0 + (x * 0.1));
-                    }
-                    if(9 < x && x < 190) {
-                        data->table[x] = 0.005;
-                    }
-                    if(189 < x && x < 200) {
-                        data->table[x] = 0.005 * (1 - ((x-190) * 0.1));
-                    }
-                    if(199 < x && x < 210) {
-                        data->table[x] = 0.005 * (0 - ((x-200) * 0.1));
-                    }
-                    if(209 < x && x < 390) {
-                        data->table[x] = -0.005;
-                    }
-                    if(389 < x && x < TABLE_SIZE) {
-                        data->table[x] = 0.005 * (-1 + ((x-390) * 0.1));
-                    }
-                }
+                makeSquare(data);
                 fadeSignalIn(data);
                 // change waveform indicator
                 waveform = 's';
                 break;
             case 'C': // CREATE CUSTOM TIMBRE
                 fadeSignalOut(data);
-                // change table to sinewave for reference, if not already a sinewave
+                // change table to sinewave for reference
                 if(waveform != 'a') {
-                    // redefine table as sine wave
-                    for(int x=0; x<TABLE_SIZE; x++) {
-                        data->table[x] = (float) sin( ((double)x/(double)TABLE_SIZE) * M_PI * 2.);
-                    }
+                    makeSine(data);
                 }
-
-                create_CustomTimbre(data);
-
+                makeCustomUI(data);
                 // change waveform indicator
                 waveform = 'c';
                 // fade signal in again
                 fadeSignalIn(data);
                 break;
             case 'z': // PRINT OPERATING INFO TO TERMINAL
-                printf("\nTo enter a command, type its letter and hit RETURN. ");
-                printf("Each command is\none symbol long.  Don't include quotations or brackets.\n\n\n");
+                printf("\nTo enter a command, type its letter and hit ");
+                printf("RETURN. Each command is\none symbol long.  Don't");
+                printf("include quotations or brackets.\n\n\n");
                 printf("      PARTIAL SCHEMATIC OF KEYBOARD:\n\n");
                 printf("---------------- KEYS: -----------------------|\n");
                 printf("                                              |\n");
@@ -366,12 +372,19 @@ void Engine_Monophonic(paUserData *data)
                 printf("                                              |\n");
                 printf("[g#][a]   [b] [c]   [d]   [e] [f]   [g]   [a] |\n");
                 printf("       [a#]      [c#]  [d#]      [f#]  [g#]   |\n");
-                printf("______________________________________________|\n\n\n");
-                printf("   OTHER COMMANDS:\n   --------------\n     -   --->  Go down an octave\n");
-                printf("     =   --->  Go up an octave (if it were '+' you would have to type shift...)\n");
-                printf("     A   --->  Timbre = sine wave (default)\n     S   --->  Timbre = square wave\n");
+                printf("______________________________________________|\n");
+                printf("\n\n   OTHER COMMANDS:\n   --------------\n");
+                printf("     -   --->  Go down an octave\n");
+                printf("     =   --->  Go up an octave (if it were '+' you");
+                printf("would have to type shift...)\n");
+                printf("     A   --->  Timbre = sine wave (default)\n");
+                printf("     S   --->  Timbre = square wave\n");
                 printf("     C   --->  Synthesize custom timbre\n");
-                printf("     z   --->  Print operation info to terminal\n     x   --->  EXIT PROGRAM\n\n");
+                printf("     z   --->  Print operation info to terminal\n");
+                printf("     x   --->  EXIT PROGRAM\n\n");
+                break;
+            case 'p':
+                printTable(data);
                 break;
             case 'x':
                 // stops the while loop
@@ -407,14 +420,11 @@ int main(int argc, char *argv[])
         printf("\nUser data failed to map.\n");
         exit(0);
     }
-
+    
     // sine wave table created
-    for(x=0; x<TABLE_SIZE; x++)
-        {
-            data->table[x] = (float) sin( ((double)x/(double)TABLE_SIZE) * M_PI * 2.);
-        }
-
-    // Amplitude and pitch are set to avoid a segmentation fault when stream starts:
+    makeSine(data);
+    
+    // init amplitude and pitch:
     data->amplitudeScaling = 0; // start note has no amplitude
     data->pitchIncrementer = 2.0275; // starting pitch is A-220
 
@@ -430,7 +440,7 @@ int main(int argc, char *argv[])
     if(err != paNoError) error(err, data);
 
     // setup output parameters for Pa_OpenStream()
-    outputParameters.device = Pa_GetDefaultOutputDevice(); // sends audio to default output
+    outputParameters.device = Pa_GetDefaultOutputDevice();
     outputParameters.channelCount = 2; // stereo
     outputParameters.sampleFormat = paFloat32; // 32 bit floating point samples
     outputParameters.suggestedLatency = Pa_GetDeviceInfo(outputParameters.device)->
