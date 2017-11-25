@@ -35,35 +35,8 @@ typedef struct
     float table_position_R; // right stereo channel table position
     float pitchIncrementer; // used to set increment value in the callback function
     float amplitudeScaling; // used to create envelope
-    float voicePosition[VOICES]; // used to keep track of individual voices when in polyphony mode
-    float voiceIncrementer[VOICES]; // used to increment individual voices
-    float voiceAmpScaling[VOICES]; // used to apply envelope to individual voices
 }
 paUserData;
-
-// define the struct used to hold envelope info
-typedef struct
-{
-    // for scaling magnitude of the envelope transitions
-    float initial;
-    float peak;
-    float sustain;
-    // for temporally scaling the envelope transitions
-    double attack;
-    double decay;
-    double release;
-}
-envelopeData;
-
-// define the struct used to hold data for the polyphony operator
-typedef struct
-{
-    int engine_running;
-    int incomming_note;
-    int channel;
-    float incomming_pitchIncrementer;
-}
-polyphonyData;
 
 /* This is the callback function which is called repeatedly by portaudio,
    it is what actually drives the audio stream.  Every time it is called
@@ -105,151 +78,21 @@ static int monophonyCallback(const void *inputBuffer, void *outputBuffer,
     return paContinue;
 }
 
-/* This is the callback function which is called repeatedly by portaudio,
-   it is what actually drives the audio stream.  Every time it is called
-   it sends another set of frames to the output buffer.  When the buffer
-   filled it is called again, until something stops the stream. */
-static int polyphonyCallback(const void *inputBuffer, void *outputBuffer,
-                          unsigned long framesPerBuffer,
-                          const PaStreamCallbackTimeInfo *timeInfo,
-                          PaStreamCallbackFlags statusFlags,
-                          void *userData)
-{
-    // setting up arguments for use
-    paUserData *data = (paUserData*)userData;
-    float *out = (float*)outputBuffer;
-    unsigned long i; //for looping use...
-    int x; // for looping...
-
-    // casting the unused arguments as void to avoid 'unused' errors 
-    (void) timeInfo;
-    (void) statusFlags;
-    (void) inputBuffer;
-
-    // the loop that writes each frame to the output buffer
-    for(i=0; i<framesPerBuffer; i++)
-    {
-        float added_voice_amplitudes = 0;
-        // voices are added together
-        for(x = 0; x < VOICES; x++) {
-            added_voice_amplitudes += (data->voiceAmpScaling[x] *
-                data->table[(int)data->voicePosition[x]]) / VOICES;
-        }
-        // frames alternate between left and right channels, thereby
-        // multiplexing stereo information into the serial buffer
-        // currently its effectively a mono stream...
-        *out++ = added_voice_amplitudes;
-        *out++ = added_voice_amplitudes;
-        // table position for each voice is incremented
-        for(x = 0; x < VOICES; x++) {
-            data->voicePosition[x] += data->voiceIncrementer[x];
-        }
-        // table positions are limited to TABLE_SIZE
-        for(x = 0; x < VOICES; x++) {
-            if(data->voicePosition[x] >= TABLE_SIZE) data->voicePosition[x] -= TABLE_SIZE;
-        }
-    }
-
-    return paContinue;
+void fadeSignalOut(paUserData *data) {
+    for(; data->amplitudeScaling > 0; data->amplitudeScaling -= 0.000005) {
+        Pa_Sleep(0);}
 }
 
-/* These INIT functions initiate variables that will be used in a specific mode of the program */
-
-// initiates envelope settings based on command line args; only called when in mode 'e'
-int Init_EnvelopeSettings(envelopeData *envelope_settings, int argc, char *argv[])
-{
-    // check that envelope parameters are in correct range
-    if(atoi(argv[2]) > 100 || atoi(argv[3]) > 100 || atoi(argv[4]) > 100) {
-        printf("\nERROR: Envelope amplitude settings (first 3 args) ");
-        printf("need to be 0 <= X <= 100\n\n");
-        return 1;
+void fadeSignalIn(paUserData *data) {
+    for(; data->amplitudeScaling < 1; data->amplitudeScaling += 0.000005) {
+        Pa_Sleep(0);
     }
-    if(atoi(argv[2]) < 0 || atoi(argv[3]) < 0 || atoi(argv[4]) < 0) {
-        printf("\nERROR: Envelope amplitude settings (first 3 args) ");
-        printf("need to be 0 <= X <= 100\n\n");
-        return 1;
-    }
-    if(atoi(argv[5]) > 6 || atoi(argv[6]) > 6 || atoi(argv[7]) > 6) {
-        printf("\nERROR: Envelope duration settings (last 3 args) ");
-        printf("need to be 1 <= X <= 6\n\n");
-        return 1;
-    }
-    if(atoi(argv[5]) < 1 || atoi(argv[6]) < 1 || atoi(argv[7]) < 1) {
-        printf("\nERROR: Envelope duration settings (last 3 args) ");
-        printf("need to be 1 <= X <= 6\n\n");
-        return 1;
-    }
-
-    // set up envelope data from command line arguments
-    envelope_settings->initial = ((float)(atoi(argv[2])) / 100);
-    envelope_settings->peak = ((float)(atoi(argv[3])) / 100);
-    envelope_settings->sustain = ((float)(atoi(argv[4])) / 100);
-    envelope_settings->attack = 1 / (double)(atoi(argv[5]) * 500000);
-    envelope_settings->decay = 1 / (double)(atoi(argv[6]) * 500000);
-    envelope_settings->release = 1 / (double)(atoi(argv[7]) * 500000);
-
-    return 0;
 }
 
-// finds an open polyphony channel for the polyphony operator child process
-int find_OpenChanel(paUserData *data)
-{
-    int i;
-    // find a channel that has a zero amplitude signal, return that channel
-    for(i = 0; i < VOICES; i++) {
-        if(data->voiceAmpScaling[i] == 0) return i;
+void makeSine(paUserData *data) {
+    for(int x=0; x<TABLE_SIZE; x++) {
+        data->table[x] = (float) sin( ((double)x/(double)TABLE_SIZE) * M_PI * 2.);
     }
-    // returns -1 if no channel is open
-    return -1;
-}
-
-/* Forks to execute a note with envelope, returning control to the polyphony operator
-   so that it can process the next incomming note. */
-void voiceFork(paUserData *data,
-    envelopeData *envelope_settings,
-    polyphonyData *polyData)
-{
-    // set up local variables
-    int channel_local = polyData->channel;
-    double attackLocal = envelope_settings->attack;
-    double decayLocal = envelope_settings->decay;
-    double releaseLocal = envelope_settings->release;
-
-    // to distinguish parent and child processes
-    pid_t parentPID = getpid();
-    // fork, child PID
-    pid_t childPID = fork();
-
-/* ---------------------(CHILD PROCESS)-----------------
-   ------------------ ENVELOPE EXECUTION --------------- */
-    if(getpid() != parentPID) {
-        // execute attack
-        for(data->voiceAmpScaling[channel_local] = envelope_settings->initial;
-            data->voiceAmpScaling[channel_local] < envelope_settings->peak;
-            data->voiceAmpScaling[channel_local] += attackLocal) {
-            Pa_Sleep(0);
-        }
-        // execute decay
-        for(data->voiceAmpScaling[channel_local] = envelope_settings->peak;
-            data->voiceAmpScaling[channel_local] > envelope_settings->sustain;
-            data->voiceAmpScaling[channel_local] -= decayLocal) {
-            Pa_Sleep(0);
-        }
-        // execute release
-        for(data->voiceAmpScaling[channel_local] = envelope_settings->sustain;
-            data->voiceAmpScaling[channel_local] > 0;
-            data->voiceAmpScaling[channel_local] -= releaseLocal) {
-            Pa_Sleep(0);
-        }
-
-        // make sure scaling factor is exactly 0
-        data->voiceAmpScaling[channel_local] = 0;
-
-        // exit this process when envelope has finished executing
-        _exit(0);
-    }
-
-    return;
 }
 
 // create a custom timbre based on user input
@@ -354,259 +197,6 @@ void create_CustomTimbre(paUserData *data)
 
 /* The engines prompt for and process user commands. */
 
-// This engine is used if envelope arguments were included on the command line
-void Engine_Polyphonic(paUserData *data,
-    envelopeData *envelope_settings,
-    polyphonyData *polyData)
-{
-    // set up some local variables
-    char ch;
-    char waveform = 'a';
-    int loop = 1;
-    int octave = 3;
-    int x = 0;
-    float total_output;
-
-    // print engine info
-    printf("ENGINE INITIATED: polyphonic (with envelope)\nPROCEED TO JAM\n\n");
-
-    // this loop continues to ask for user input, and executes user commands
-    // note commands are fed to the polyphony operator child process
-    while(loop) {
-        // print the prompt
-        printf(">> ");
-        ch = getc(stdin); // gets command character
-        getc(stdin); // eats <RETURN>
-
-        // user command switchboard
-        switch(ch) {
-            /* NOTE COMMANDS: Pitch is calculated based on the octave and
-                              the frequencies found in the baseHZ array.
-                              Then, incomming_note is changed to 1,
-                              causing the polyphony operator child
-                              process to execute the note with
-                              envelope.
-            */
-            case '`':
-                polyData->incomming_pitchIncrementer = (baseHZ[11] *
-                    pow((double)2, (double)(octave-1))) / 110;
-                polyData->incomming_note = 1;
-                break;
-            case '1':
-                polyData->incomming_pitchIncrementer = (baseHZ[0] *
-                    pow((double)2, (double)octave)) / 110;
-                polyData->incomming_note = 1;
-                break;
-            case 'q':
-                polyData->incomming_pitchIncrementer = (baseHZ[1] *
-                    pow((double)2, (double)octave)) / 110;
-                polyData->incomming_note = 1;
-                break;
-            case '2':
-                polyData->incomming_pitchIncrementer = (baseHZ[2] *
-                    pow((double)2, (double)octave)) / 110;
-                polyData->incomming_note = 1;
-                break;
-            case '3':
-                polyData->incomming_pitchIncrementer = (baseHZ[3] *
-                    pow((double)2, (double)octave)) / 110;
-                polyData->incomming_note = 1;
-                break;
-            case 'e':
-                polyData->incomming_pitchIncrementer = (baseHZ[4] *
-                    pow((double)2, (double)octave)) / 110;
-                polyData->incomming_note = 1;
-                break;
-            case '4':
-                polyData->incomming_pitchIncrementer = (baseHZ[5] *
-                    pow((double)2, (double)octave)) / 110;
-                polyData->incomming_note = 1;
-                break;
-            case 'r':
-                polyData->incomming_pitchIncrementer = (baseHZ[6] *
-                    pow((double)2, (double)octave)) / 110;
-                polyData->incomming_note = 1;
-                break;
-            case '5':
-                polyData->incomming_pitchIncrementer = (baseHZ[7] *
-                    pow((double)2, (double)octave)) / 110;
-                polyData->incomming_note = 1;
-                break;
-            case '6':
-                polyData->incomming_pitchIncrementer = (baseHZ[8] *
-                    pow((double)2, (double)octave)) / 110;
-                polyData->incomming_note = 1;
-                break;
-            case 'y':
-                polyData->incomming_pitchIncrementer = (baseHZ[9] *
-                    pow((double)2, (double)octave)) / 110;
-                polyData->incomming_note = 1;
-                break;
-            case '7':
-                polyData->incomming_pitchIncrementer = (baseHZ[10] *
-                    pow((double)2, (double)octave)) / 110;
-                polyData->incomming_note = 1;
-                break;
-            case 'u':
-                polyData->incomming_pitchIncrementer = (baseHZ[11] *
-                    pow((double)2, (double)octave)) / 110;
-                polyData->incomming_note = 1;
-                break;
-            case '8':
-                polyData->incomming_pitchIncrementer = (baseHZ[0] *
-                    pow((double)2, (double)(octave+1))) / 110;
-                polyData->incomming_note = 1;
-                break;
-            /* OCTAVE CHANGE COMMANDS: Octave is used to calculate the
-                                       pitch incrementer for a note in a
-                                       given octave (see above).  Octave
-                                       value ranges from 2 to 5.
-            */
-            case '-':
-                if(octave == 2) {
-                    printf("Already at lowest octave\n");
-                    break;
-                } else {
-                    octave--;
-                    printf("Octave: %d\n", octave);
-                    break;
-                }
-            case '=':
-                if(octave == 5) {
-                    printf("Already at highest octave\n");
-                    break;
-                } else {
-                    octave++;
-                    printf("Octave: %d\n", octave);
-                    break;
-                }
-            /* TIMBRE COMMANDS: Wavetable is rewritten to create a new timbre */
-            case 'A': // CHANGE TO SINE WAVE
-                // wait for all polyphony channels to reach zero amplitude
-                total_output = 1;
-                while(total_output) {
-                    total_output = 0;
-                    for(x=0; x<VOICES; x++) {
-                        total_output += data->voiceAmpScaling[x];
-                    }
-                }
-                // redefine table as sine wave
-                for(x=0; x<TABLE_SIZE; x++)
-                    {
-                        data->table[x] = (float)sin(((double)x/(double)TABLE_SIZE) * M_PI * 2.);
-                    }
-                // change waveform indicator
-                waveform = 'a';
-                break;
-            case 'S': // CHANGE TO PSEUDO SQUARE WAVE
-                // wait for all polyphony channels to reach zero amplitude
-                total_output = 1;
-                while(total_output) {
-                    total_output = 0;
-                    for(x=0; x<VOICES; x++) {
-                        total_output += data->voiceAmpScaling[x];
-                    }
-                }
-
-                // redefine table as square wave
-                for(x=0; x<TABLE_SIZE; x++)
-                    {
-                        if(x < 10) {
-                            data->table[x] = 0.005 * (0 + (x * 0.1));
-                        }
-                        if(9 < x && x < 190) {
-                            data->table[x] = 0.005;
-                        }
-                        if(189 < x && x < 200) {
-                            data->table[x] = 0.005 * (1 - ((x-190) * 0.1));
-                        }
-                        if(199 < x && x < 210) {
-                            data->table[x] = 0.005 * (0 - ((x-200) * 0.1));
-                        }
-                        if(209 < x && x < 390) {
-                            data->table[x] = -0.005;
-                        }
-                        if(389 < x && x < TABLE_SIZE) {
-                            data->table[x] = 0.005 * (-1 + ((x-390) * 0.1));
-                        }
-                    }
-
-                // change waveform indicator
-                waveform = 's';
-                break;
-            case 'C': // CREATE CUSTOM TIMBRE
-                // wait for all polyphony channels to reach zero amplitude
-                total_output = 1;
-                while(total_output) {
-                    total_output = 0;
-                    for(x=0; x<VOICES; x++) {
-                        total_output += data->voiceAmpScaling[x];
-                    }
-                }
-
-                // change table to sinewave for reference, if not already a sinewave
-                if(waveform != 'a') {
-                    // redefine table as sine wave
-                    for(x=0; x<TABLE_SIZE; x++)
-                        {
-                            data->table[x] = (float) sin( ((double)x/(double)TABLE_SIZE) * M_PI * 2.);
-                        }
-                }
-
-                create_CustomTimbre(data);
-
-                // change waveform indicator
-                waveform = 'c';
-                break;
-            case 'z': // PRINT OPERATING INFO TO TERMINAL
-                printf("\nTo enter a command, type its letter and hit RETURN. ");
-                printf("Each command is\none symbol long.  Don't include quotations or brackets.\n\n\n");
-                printf("      PARTIAL SCHEMATIC OF KEYBOARD:\n\n");
-                printf("---------------- KEYS: -----------------------|\n");
-                printf("                                              |\n");
-                printf("[`][1]   [2] [3]   [4]   [5] [6]   [7]   [8]  |\n");
-                printf("      [q]       [e]   [r]       [y]   [u]     |\n");
-                printf("                                              |\n");
-                printf("----------- CORRESPONDING NOTES: -------------|\n");
-                printf("                                              |\n");
-                printf("[g#][a]   [b] [c]   [d]   [e] [f]   [g]   [a] |\n");
-                printf("       [a#]      [c#]  [d#]      [f#]  [g#]   |\n");
-                printf("______________________________________________|\n\n\n");
-                printf("   OTHER COMMANDS:\n   --------------\n     -   --->  Go down an octave\n");
-                printf("     =   --->  Go up an octave (if it were '+' you would have to type shift...)\n");
-                printf("     A   --->  Timbre = sine wave (default)\n     S   --->  Timbre = square wave\n");
-                printf("     C   --->  Synthesize custom timbre\n");
-                printf("     z   --->  Print operation info to terminal\n     x   --->  EXIT PROGRAM\n\n");
-                break;
-            case 'x': // EXIT PROGRAM
-                // stop engine loop
-                loop=0;
-                // stop polyphony operator loop
-                polyData->engine_running=0;
-
-                // exit engine only when all polyphony channels reach zero amplitude
-                int i = 0;
-                total_output = 1;
-                while(total_output) {
-                    total_output = 0;
-                    // signal output is calculated
-                    for(x=0; x<VOICES; x++) {
-                        total_output += data->voiceAmpScaling[x];
-                    }
-                    // if signal was not dead at second loop, print:
-                    if(i == 1) printf("\nWAITING FOR SIGNAL TO DIE...\n");
-                    i++;
-                }
-                break;
-
-            default:
-                printf("NOT A NOTE!\n");
-        }
-    }
-
-    return;
-}
-
 void Engine_Monophonic(paUserData *data)
 {
     // set up some local variables
@@ -614,10 +204,10 @@ void Engine_Monophonic(paUserData *data)
     char waveform = 'a';
     int loop = 1;
     int octave = 3;
-    int x = 0;
 
     // print engine info
     printf("ENGINE INITIATED: monophonic (continuous signal)\nPROCEED TO JAM\n\n");
+    fadeSignalIn(data);
 
     // this loop continues to ask for user input, and executes user commands
     while(loop) {
@@ -625,11 +215,6 @@ void Engine_Monophonic(paUserData *data)
         printf(">> ");
         ch = getc(stdin); // gets command letter
         getc(stdin); // eats <RETURN>
-
-        // used to fade in signal on first note, in order to prevent damage to speakers
-        if(x == 0) {
-            data->amplitudeScaling = 0;
-        }
 
         // user command switchboard
         switch(ch) {
@@ -708,7 +293,6 @@ void Engine_Monophonic(paUserData *data)
                     octave--;
                     printf("Octave: %d\n", octave);
                 }
-                if(x == 0) x = -1;
                 break;
             case '=':
                 if(octave == 5) {
@@ -717,79 +301,49 @@ void Engine_Monophonic(paUserData *data)
                     octave++;
                     printf("Octave: %d\n", octave);
                 }
-                if(x == 0) x = -1;
                 break;
             /* TIMBRE COMMANDS: Wavetable is rewritten to create a new timbre */
             case 'A': // CHANGE TO SINE WAVE
-                // fade out signal
-                for(data->amplitudeScaling = data->amplitudeScaling; data->amplitudeScaling > 0; data->amplitudeScaling -= 0.000005) {
-                    Pa_Sleep(0);
-                }
-
-                // redefine table as sine wave
-                for(x=0; x<TABLE_SIZE; x++)
-                    {
-                        data->table[x] = (float) sin( ((double)x/(double)TABLE_SIZE) * M_PI * 2.);
-                    }
-
-                // fade signal in again
-                for(data->amplitudeScaling = data->amplitudeScaling; data->amplitudeScaling < 1; data->amplitudeScaling += 0.000005) {
-                    Pa_Sleep(0);
-                }
-
-                // change waveform indicator
+                fadeSignalOut(data);
+                makeSine(data);
+                fadeSignalIn(data);
                 waveform = 'a';
                 break;
             case 'S': // CHANGE TO PSEUDO SQUARE WAVE
-                // fade out signal
-                for(data->amplitudeScaling = data->amplitudeScaling; data->amplitudeScaling > 0; data->amplitudeScaling -= 0.000005) {
-                    Pa_Sleep(0);
-                }
-
+                fadeSignalOut(data);
                 // redefine table as square wave
-                for(x=0; x<TABLE_SIZE; x++)
-                    {
-                        if(x < 10) {
-                            data->table[x] = 0.005 * (0 + (x * 0.1));
-                        }
-                        if(9 < x && x < 190) {
-                            data->table[x] = 0.005;
-                        }
-                        if(189 < x && x < 200) {
-                            data->table[x] = 0.005 * (1 - ((x-190) * 0.1));
-                        }
-                        if(199 < x && x < 210) {
-                            data->table[x] = 0.005 * (0 - ((x-200) * 0.1));
-                        }
-                        if(209 < x && x < 390) {
-                            data->table[x] = -0.005;
-                        }
-                        if(389 < x && x < TABLE_SIZE) {
-                            data->table[x] = 0.005 * (-1 + ((x-390) * 0.1));
-                        }
+                for(int x=0; x<TABLE_SIZE; x++) {
+                    if(x < 10) {
+                        data->table[x] = 0.005 * (0 + (x * 0.1));
                     }
-
-                // fade signal in again
-                for(data->amplitudeScaling = data->amplitudeScaling; data->amplitudeScaling < 1; data->amplitudeScaling += 0.000005) {
-                    Pa_Sleep(0);
+                    if(9 < x && x < 190) {
+                        data->table[x] = 0.005;
+                    }
+                    if(189 < x && x < 200) {
+                        data->table[x] = 0.005 * (1 - ((x-190) * 0.1));
+                    }
+                    if(199 < x && x < 210) {
+                        data->table[x] = 0.005 * (0 - ((x-200) * 0.1));
+                    }
+                    if(209 < x && x < 390) {
+                        data->table[x] = -0.005;
+                    }
+                    if(389 < x && x < TABLE_SIZE) {
+                        data->table[x] = 0.005 * (-1 + ((x-390) * 0.1));
+                    }
                 }
-
+                fadeSignalIn(data);
                 // change waveform indicator
                 waveform = 's';
                 break;
             case 'C': // CREATE CUSTOM TIMBRE
-                // fade out signal
-                for(data->amplitudeScaling = data->amplitudeScaling; data->amplitudeScaling > 0; data->amplitudeScaling -= 0.000005) {
-                    Pa_Sleep(0);
-                }
-
+                fadeSignalOut(data);
                 // change table to sinewave for reference, if not already a sinewave
                 if(waveform != 'a') {
                     // redefine table as sine wave
-                    for(x=0; x<TABLE_SIZE; x++)
-                        {
-                            data->table[x] = (float) sin( ((double)x/(double)TABLE_SIZE) * M_PI * 2.);
-                        }
+                    for(int x=0; x<TABLE_SIZE; x++) {
+                        data->table[x] = (float) sin( ((double)x/(double)TABLE_SIZE) * M_PI * 2.);
+                    }
                 }
 
                 create_CustomTimbre(data);
@@ -797,9 +351,7 @@ void Engine_Monophonic(paUserData *data)
                 // change waveform indicator
                 waveform = 'c';
                 // fade signal in again
-                for(data->amplitudeScaling = data->amplitudeScaling; data->amplitudeScaling < 1; data->amplitudeScaling += 0.000005) {
-                    Pa_Sleep(0);
-                }
+                fadeSignalIn(data);
                 break;
             case 'z': // PRINT OPERATING INFO TO TERMINAL
                 printf("\nTo enter a command, type its letter and hit RETURN. ");
@@ -820,40 +372,25 @@ void Engine_Monophonic(paUserData *data)
                 printf("     A   --->  Timbre = sine wave (default)\n     S   --->  Timbre = square wave\n");
                 printf("     C   --->  Synthesize custom timbre\n");
                 printf("     z   --->  Print operation info to terminal\n     x   --->  EXIT PROGRAM\n\n");
-                
-                if(x == 0) x = -1; // prevents signal from fading in if 'z' is first command
                 break;
             case 'x':
                 // stops the while loop
                 loop=0;
-
-                // fades out amplitude to avoid damage to speakers
-                for(data->amplitudeScaling = data->amplitudeScaling;
-                    data->amplitudeScaling > 0;
-                    data->amplitudeScaling -= 0.000005) {
-                    Pa_Sleep(0);
-                }
-
-                x++;
+                fadeSignalOut(data);
                 break;
-
             default:
                 printf("NOT A NOTE!\n");
-                if(x == 0) x = -1;
         }
-        // fade-in on first note occurs here
-        if(x == 0) {
-            for(data->amplitudeScaling = data->amplitudeScaling;
-                data->amplitudeScaling < 1;
-                data->amplitudeScaling += 0.000005) {
-                    Pa_Sleep(0);
-                }
-        }
-        // increment x so that fade-in only occurs on first note
-        x++;
     }
 
     return;
+}
+
+void error(PaError err, paUserData *data) {
+	Pa_Terminate();
+	free(data);
+	fprintf(stderr, "Error message: %s\n", Pa_GetErrorText(err));
+	exit(0);
 }
 
 int main(int argc, char *argv[])
@@ -863,137 +400,19 @@ int main(int argc, char *argv[])
     PaStream *stream; // open stream
     PaError err; // err is used for error handling
     paUserData *data; // forward declaration of mapped paUserdata instance
-    envelopeData *envelope_settings; // forward declaration of mapped envelopeData instance
-    polyphonyData *polyData; // forward declaration of mapped polyphonyData instance
     int x; // for looping
 
-    // map user data so that child process can use it (see below)
-    paUserData *protoData = malloc(sizeof(paUserData)); // create user data structure
-    data = (paUserData*)mmap(NULL, sizeof(paUserData),
-        PROT_READ|PROT_WRITE, MAP_ANON|MAP_SHARED, -1, 0);
-    // check that mapping succeeded
+    data = malloc(sizeof(paUserData));
     if(data == MAP_FAILED) {
         printf("\nUser data failed to map.\n");
-        goto ARGerror;
+        exit(0);
     }
-
-    // copy protoData into mapped 'data' and free protoData
-    memcpy(data, protoData, sizeof(paUserData));
-    free(protoData);
 
     // sine wave table created
     for(x=0; x<TABLE_SIZE; x++)
         {
             data->table[x] = (float) sin( ((double)x/(double)TABLE_SIZE) * M_PI * 2.);
         }
-
-    /* DETERMINE MODE, SKIP TO APPROPRIATE JUMP POINT */
-    if(argc < 2) {
-        printf("\nERROR:  MODE ARGUMENT MISSING\n\n");
-        printf("OPTIONS:\n\n");
-        printf(" ./jamboard c\t---> continuous signal mode (monophonic) <---\n\n");
-        printf(" ./jamboard e\t---> envelope control mode (polyphonic) <---\n\n");
-        goto ARGerror;
-    } else if(*argv[1] == 'e') {
-        if(argc != 8) {
-            printf("\nERROR:  INCORRECT NUMBER OF ARGUMENTS FOR MODE = e\n\n");
-            printf(" ./jamboard e (initial) (peak) (sustain) (attack) (decay) (release)\n\n\n");
-            goto ARGerror;
-        }
-        goto EnvelopeInit;
-    } else if(*argv[1] == 'c') {
-        if(argc != 2) {
-            printf("\nERROR:  INCORRECT NUMBER OF ARGUMENTS FOR MODE = c\n\n");
-            printf(" ./jamboard c\n\n\n");
-            goto ARGerror;
-        }
-        goto postModeInit;
-    } else {
-        printf("\nERROR:  INCORRECT MODE ARGUMENT\n\n");
-        printf("OPTIONS:\n\n");
-        printf(" ./jamboard c\t---> continuous signal mode (monophonic) <---\n\n");
-        printf(" ./jamboard e\t---> envelope control mode (polyphonic) <---\n\n");
-        goto ARGerror;
-    }
-
-/* SET ARGUMENTS FOR ENVELOPE CONTROL IF THEY WERE INCLUDED */
-EnvelopeInit:
-
-    printf(""); // For some reason I need a function here or the compiler yells at me
-
-    /* ----- ALLOCATE, MAP, COPY, AND FREE HEAP MEMORY FOR 'e' MODE ----- */
-    envelopeData *protoEnvelope_settings = malloc(sizeof(envelopeData)); // create envelope data structure
-    // map envelope data so that child process can use it
-    envelope_settings = (envelopeData*)mmap(NULL, sizeof(envelopeData),
-        PROT_READ|PROT_WRITE, MAP_ANON|MAP_SHARED, -1, 0);
-    // check mapping success
-    polyphonyData *protopolyData = malloc(sizeof(polyphonyData)); // create polyphony data structure
-    // map polyphony data so that child process can use it
-    polyData = (polyphonyData*)mmap(NULL, sizeof(polyphonyData),
-        PROT_READ|PROT_WRITE, MAP_ANON|MAP_SHARED, -1, 0);
-    // check mapping success
-    if(envelope_settings == MAP_FAILED || polyData == MAP_FAILED) {
-        printf("\nUser data failed to map.\n");
-        goto ARGerror;
-    }
-    // copy protoEnvelope_settings into mapped 'envelope_settings'
-    memcpy(envelope_settings, protoEnvelope_settings, sizeof(envelopeData));
-    free(protoEnvelope_settings); // free protoEnvelope_settings
-    // same for polyData
-    memcpy(polyData, protopolyData, sizeof(polyphonyData));
-    free(protopolyData);
-
-    /* ----- INITIATE NECESSARY VARIABLES FOR 'e' MODE -----*/
-    if(Init_EnvelopeSettings(envelope_settings, argc, argv) == 1) return 0;
-    // initiate polyphony data
-    polyData->engine_running = 1;
-    polyData->incomming_note = 0;
-    // initiate some userData
-    for(x=0; x<VOICES; x++) {
-        data->voiceAmpScaling[x] = 0;
-    }
-
-/* Fork to create a child process that facilitates polyphony: */
-
-    // to distinguish parent and child processes
-    pid_t parentPID = getpid();
-    // fork, child PID
-    pid_t childPID = fork();
-
-/* ---------------------(CHILD PROCESS)-----------------
-   ------------------ POLYPHONY OPERATOR --------------- */
-    if(getpid() != parentPID) {
-        // operator keeps running until the engine terminates the loop (see Engine_Polyphonic())
-        while(polyData->engine_running) {
-            // Remains inactive until the engine signals 'incomming_note = 1'
-            if(polyData->incomming_note == 1) {
-                // gets an empty polyphony channel
-                polyData->channel = find_OpenChanel(data);
-                // if no channels are empty, prints...
-                if(polyData->channel == -1) {
-                    printf("\nMaximum number of voices\n");
-                // else it calls voiceFork(), which executes the note with envelope
-                } else {
-                    data->voiceIncrementer[polyData->channel] =
-                        polyData->incomming_pitchIncrementer;
-                    voiceFork(data, envelope_settings, polyData);
-                }
-            // resets itself to wait for next incomming_note signal from engine
-            polyData->incomming_note = 0;
-            }
-        }
-        // when engine exits program, operator unmaps data struct instances
-        munmap(data, sizeof(paUserData));
-        munmap(envelope_settings, sizeof(envelopeData));
-        munmap(polyData, sizeof(polyphonyData));
-        return 0;
-    }
-/* ----------------------------------------------------- */
-
-    goto postModeInit;
-
-/* SKIP TO HERE AFTER MODE INITIATION FUNCTION IS CALLED (if any...) */
-postModeInit:
 
     // Amplitude and pitch are set to avoid a segmentation fault when stream starts:
     data->amplitudeScaling = 0; // start note has no amplitude
@@ -1008,7 +427,7 @@ postModeInit:
 
     // initializes PortAudio library
     err = Pa_Initialize();
-    if(err != paNoError) goto PAerror;
+    if(err != paNoError) error(err, data);
 
     // setup output parameters for Pa_OpenStream()
     outputParameters.device = Pa_GetDefaultOutputDevice(); // sends audio to default output
@@ -1018,80 +437,40 @@ postModeInit:
         defaultLowOutputLatency;
     outputParameters.hostApiSpecificStreamInfo = NULL;
 
-    // start stream; use polyphonyCallback if in mode 'e', else use monophonyCallback
-    if(*argv[1] == 'e') {
-        // Open stream
-        err = Pa_OpenStream(
-                    &stream,
-                    NULL,
-                    &outputParameters,
-                    SAMPLE_RATE,
-                    FRAMES_PER_BUFFER,
-                    paClipOff,
-                    polyphonyCallback,
-                    data);
-    } else {
-        // Open stream
-        err = Pa_OpenStream(
-                    &stream,
-                    NULL,
-                    &outputParameters,
-                    SAMPLE_RATE,
-                    FRAMES_PER_BUFFER,
-                    paClipOff,
-                    monophonyCallback,
-                    data);
-    }
-    if(err != paNoError) goto PAerror;
+    // start stream
+    err = Pa_OpenStream(&stream,
+                        NULL,
+                        &outputParameters,
+                        SAMPLE_RATE,
+                        FRAMES_PER_BUFFER,
+                        paClipOff,
+                        monophonyCallback,
+                        data);
+    if(err != paNoError) error(err, data);
 
     // Start stream
     err = Pa_StartStream(stream);
-    if(err != paNoError) goto PAerror;
+    if(err != paNoError) error(err, data);
 
     // print indication that stream is open
     printf("\n\nSTREAM OPEN\n");
 
-    // Start correct engine
-    if(*argv[1] == 'e') {
-        Engine_Polyphonic(data, envelope_settings, polyData);
-    } else if(*argv[1] == 'c') {
-        Engine_Monophonic(data);
-    }
+    Engine_Monophonic(data);
     
     // stream is stopped
     err = Pa_StopStream(stream);
-    if(err != paNoError) goto PAerror;
+    if(err != paNoError) error(err, data);
 
     // stream is closed
     err = Pa_CloseStream(stream);
-    if(err != paNoError) goto PAerror;
+    if(err != paNoError) error(err, data);
     printf("\nSTREAM CLOSED\n\n");
 
     // PortAudio library is terminated
     err = Pa_Terminate();
-    if(err != paNoError) goto PAerror;
+    if(err != paNoError) error(err, data);
 
     // unmap mapped data structs
-    munmap(data, sizeof(paUserData));
-    if(*argv[1] == 'e') munmap(envelope_settings, sizeof(envelopeData));
-    if(*argv[1] == 'e') munmap(polyData, sizeof(polyphonyData));
-
-    // program exits
-    return err;
-// PA error handling
-PAerror:
-    Pa_Terminate();
-
-    // unmap mapped data structs
-    munmap(data, sizeof(paUserData));
-    if(*argv[1] == 'e') munmap(envelope_settings, sizeof(envelopeData));
-    if(*argv[1] == 'e') munmap(polyData, sizeof(polyphonyData));
-
-    fprintf(stderr, "Error message: %s\n", Pa_GetErrorText(err));
-    return err;
-// command line arg error handling
-ARGerror:
-    // unmap mapped paUserData instance
-    munmap(data, sizeof(paUserData));
+    free(data);
     return 0;
 }
