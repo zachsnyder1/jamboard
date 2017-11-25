@@ -516,19 +516,19 @@ void Engine_Polyphonic(paUserData *data,
                         if(x < 10) {
                             data->table[x] = 0.005 * (0 + (x * 0.1));
                         }
-                        if(9 < x < 190) {
+                        if(9 < x && x < 190) {
                             data->table[x] = 0.005;
                         }
-                        if(189 < x < 200) {
+                        if(189 < x && x < 200) {
                             data->table[x] = 0.005 * (1 - ((x-190) * 0.1));
                         }
-                        if(199 < x < 210) {
+                        if(199 < x && x < 210) {
                             data->table[x] = 0.005 * (0 - ((x-200) * 0.1));
                         }
-                        if(209 < x < 390) {
+                        if(209 < x && x < 390) {
                             data->table[x] = -0.005;
                         }
-                        if(389 < x < TABLE_SIZE) {
+                        if(389 < x && x < TABLE_SIZE) {
                             data->table[x] = 0.005 * (-1 + ((x-390) * 0.1));
                         }
                     }
@@ -754,19 +754,19 @@ void Engine_Monophonic(paUserData *data)
                         if(x < 10) {
                             data->table[x] = 0.005 * (0 + (x * 0.1));
                         }
-                        if(9 < x < 190) {
+                        if(9 < x && x < 190) {
                             data->table[x] = 0.005;
                         }
-                        if(189 < x < 200) {
+                        if(189 < x && x < 200) {
                             data->table[x] = 0.005 * (1 - ((x-190) * 0.1));
                         }
-                        if(199 < x < 210) {
+                        if(199 < x && x < 210) {
                             data->table[x] = 0.005 * (0 - ((x-200) * 0.1));
                         }
-                        if(209 < x < 390) {
+                        if(209 < x && x < 390) {
                             data->table[x] = -0.005;
                         }
-                        if(389 < x < TABLE_SIZE) {
+                        if(389 < x && x < TABLE_SIZE) {
                             data->table[x] = 0.005 * (-1 + ((x-390) * 0.1));
                         }
                     }
@@ -890,7 +890,13 @@ int main(int argc, char *argv[])
         }
 
     /* DETERMINE MODE, SKIP TO APPROPRIATE JUMP POINT */
-    if(*argv[1] == 'e') {
+    if(argc < 2) {
+        printf("\nERROR:  MODE ARGUMENT MISSING\n\n");
+        printf("OPTIONS:\n\n");
+        printf(" ./jamboard c\t---> continuous signal mode (monophonic) <---\n\n");
+        printf(" ./jamboard e\t---> envelope control mode (polyphonic) <---\n\n");
+        goto ARGerror;
+    } else if(*argv[1] == 'e') {
         if(argc != 8) {
             printf("\nERROR:  INCORRECT NUMBER OF ARGUMENTS FOR MODE = e\n\n");
             printf(" ./jamboard e (initial) (peak) (sustain) (attack) (decay) (release)\n\n\n");
