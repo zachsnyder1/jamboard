@@ -261,6 +261,9 @@ void create_CustomTimbre(paUserData *data)
     int loop = 1;
     int x = 0;
     int i;
+    float addedAmps_scaling;
+    float added_amplitudes;
+    float temp_table[TABLE_SIZE];
 
     // print info to terminal
     printf("\n\t\tSYNTHESIZE A CUSTOM TIMBRE\n\n");
@@ -319,16 +322,11 @@ void create_CustomTimbre(paUserData *data)
         }
     }
 
-    /* CREATE NEW WAVE TABLE FROM USER INPUT */
-    // set up some variables
-    float addedAmps_scaling;
-    float added_amplitudes;
-    float temp_table[TABLE_SIZE];
-
-    // Overall amplitude of the synthesized waveform is scaled
-    // to avoid an arithmetic overflow.
-    // NOTE: first item in array kept getting corrupted, so it is
-    // ignored in these loops...
+    /* CREATE NEW WAVE TABLE FROM USER INPUT
+       Overall amplitude of the synthesized waveform is scaled
+       to avoid an arithmetic overflow.
+       NOTE: first item in array kept getting corrupted, so it is
+       ignored in these loops... */
     for(i = 1; i < (HIGHEST_HARMONIC+1); i++) {
         addedAmps_scaling += harm_amplitudes[i];
     }
@@ -864,13 +862,13 @@ int main(int argc, char *argv[])
     PaStreamParameters outputParameters; //struct for stream parameters
     PaStream *stream; // open stream
     PaError err; // err is used for error handling
-    paUserData *protoData = malloc(sizeof(paUserData)); // create user data structure
     paUserData *data; // forward declaration of mapped paUserdata instance
     envelopeData *envelope_settings; // forward declaration of mapped envelopeData instance
     polyphonyData *polyData; // forward declaration of mapped polyphonyData instance
     int x; // for looping
 
     // map user data so that child process can use it (see below)
+    paUserData *protoData = malloc(sizeof(paUserData)); // create user data structure
     data = (paUserData*)mmap(NULL, sizeof(paUserData),
         PROT_READ|PROT_WRITE, MAP_ANON|MAP_SHARED, -1, 0);
     // check that mapping succeeded
