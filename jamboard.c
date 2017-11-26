@@ -15,7 +15,7 @@
 #define SAMPLE_RATE (44100)
 #define FRAMES_PER_BUFFER (192)
 #define TABLE_SIZE (400)
-#define HIGHEST_HARMONIC (31)
+#define HIGHEST_HARMONIC (10)
 #define VOICES (6)
 
 #ifndef M_PI
@@ -35,13 +35,18 @@ typedef struct
     float table_position_R; // right stereo channel table position
     float pitchIncrementer; // used to set increment value in the callback function
     float amplitudeScaling; // used to create envelope
+    float harm_amps[HIGHEST_HARMONIC]; // used to hold harmonic amplitudes for synth
 }
 paUserData;
 
+/* 
+   ---------------------------------------------------------------
+                        PORT AUDIO CALLBACK
+   ---------------------------------------------------------------
+*/
+
 /* This is the callback function which is called repeatedly by portaudio,
-   it is what actually drives the audio stream.  Every time it is called
-   it sends another set of frames to the output buffer.  When the buffer
-   filled it is called again, until something stops the stream. */
+   it is what actually drives the audio stream. */
 static int monophonyCallback(const void *inputBuffer, void *outputBuffer,
                           unsigned long framesPerBuffer,
                           const PaStreamCallbackTimeInfo *timeInfo,
@@ -78,6 +83,39 @@ static int monophonyCallback(const void *inputBuffer, void *outputBuffer,
     return paContinue;
 }
 
+/* 
+   ---------------------------------------------------------------
+                         HELPER FUNCTIONS
+   ---------------------------------------------------------------
+*/
+
+void error(PaError err, paUserData *data) {
+	Pa_Terminate();
+	free(data);
+	fprintf(stderr, "Error message: %s\n", Pa_GetErrorText(err));
+	exit(0);
+}
+
+void printTableFloat(float *table, int size, char *msg) {
+    FILE *f = fopen("table.csv", "a");
+    fprintf(f, "[%d] %s", size, msg);
+    for(int i = 0; i < size; i++) {
+        fprintf(f, "%f,", table[i]);
+    }
+    fprintf(f, "\n");
+    fclose(f);
+}
+
+void printTableInt(int *table, int size, char *msg) {
+    FILE *f = fopen("table.csv", "a");
+    fprintf(f, "[%d] %s", size, msg);
+    for(int i = 0; i < size; i++) {
+        fprintf(f, "%d,", table[i]);
+    }
+    fprintf(f, "\n");
+    fclose(f);
+}
+
 void fadeSignalOut(paUserData *data) {
     for(; data->amplitudeScaling > 0; data->amplitudeScaling -= 0.000005) {
         Pa_Sleep(0);}
@@ -88,6 +126,12 @@ void fadeSignalIn(paUserData *data) {
         Pa_Sleep(0);
     }
 }
+
+/* 
+   ---------------------------------------------------------------
+                   WAVE TABLE SYNTHESIS FUNCTIONS
+   ---------------------------------------------------------------
+*/
 
 void makeSine(paUserData *data) {
     for(int x=0; x<TABLE_SIZE; x++) {
@@ -118,46 +162,50 @@ void makeSquare(paUserData *data) {
     }
 }
 
-void makeCustom(paUserData *data, int hA[]) {
-    float addedAmps_scaling;
-    float added_amplitudes;
+/* 
+   ---------------------------------------------------------------
+                         CUSTOM SYTHESIS (broken)
+   ---------------------------------------------------------------
+*/
+
+void makeCustom(paUserData *data) {
+    float amplitude_scale;
+    float amplitude_total;
     float temp_table[TABLE_SIZE];
+    int target_index;
     int i, x;
     
-    for(i = 1; i < (HIGHEST_HARMONIC+1); i++) {
-        addedAmps_scaling += hA[i];
+    amplitude_scale = 0.0;
+    for(i = 0; i < HIGHEST_HARMONIC; i++) {
+        printf("%f\n", data->harm_amps[i]);
+        amplitude_scale += data->harm_amps[i];
     }
 
     // harmonics are added together, one wavetable index at a time
     for(i = 0; i < TABLE_SIZE; i++) {
-        added_amplitudes = 0;
-        for(x = 1; x < (HIGHEST_HARMONIC+1); x++) {
-            added_amplitudes += (((float)hA[x] / 100) *
-                data->table[((x) * i) % TABLE_SIZE]) / ((float)addedAmps_scaling / 100);
+        amplitude_total = 0.0;
+        for(x = 0; x < (HIGHEST_HARMONIC); x++) {
+        	target_index = (int)(i * pow((double)2, x));
+        	target_index = target_index % TABLE_SIZE;
+            amplitude_total += data->table[target_index] * 
+                                (data->harm_amps[x] / amplitude_scale);
+            //printf("%f\n", amplitude_total);
         }
-        temp_table[i] = added_amplitudes;
+        temp_table[i] = amplitude_total;
     }
+    printTableFloat(temp_table, TABLE_SIZE, "TEMP TABLE: ");
 
     // main wavetable is replaced with data stored in the temporary table
     for(i = 0; i < TABLE_SIZE; i++) {
         data->table[i] = temp_table[i];
     }
-}
-
-void printTable(paUserData *data) {
-    FILE *f = fopen("table.csv", "a");
-    for(int i = 0; i < TABLE_SIZE; i++) {
-        fprintf(f, "%f,", data->table[i]);
-    }
-    fprintf(f, "\n");
-    fclose(f);
+    printTableFloat(data->table, TABLE_SIZE, "WAVE TABLE: ");
 }
 
 // create a custom timbre based on user input
 void makeCustomUI(paUserData *data)
 {
     // setup local variables
-    int harm_amplitudes[HIGHEST_HARMONIC+2] = {0}; // array for amplitude values of harmonics
     char command_check;
     int loop = 1;
     int x = 0;
@@ -207,24 +255,31 @@ void makeCustomUI(paUserData *data)
             return;
         } else if(command_check == 's' && x == 0) { // ERROR: need more user info
             printf("\n\tERROR: Enter amplitude for one or more frequency\n");
-        } else if(command_check == 's' || x >= HIGHEST_HARMONIC) { // COMMAND: synthesize
+        } else if(command_check == 's' || x >= HIGHEST_HARMONIC-1) { // COMMAND: synthesize
             printf("\n");
             loop = 0;
         } else if(atoi(&command_check) > 100) { // ERROR: invalid amplitude value
             printf("\n\tERROR: Amplitude needs to be 0<=X<=100\n");
         } else { // STORE USER INPUT, PROMPT FOR NEXT HARMONIC
             // set array value to input value
-            harm_amplitudes[x+1] = atoi(&command_check);
+            printf("%f\n", (float)atoi(&command_check));
+            data->harm_amps[x] = (float)atoi(&command_check);
             x++;
         }
     }
-    getc(stdin);
-    makeCustom(data, harm_amplitudes);
+    for(int i = 0; i < HIGHEST_HARMONIC; i++) {
+        printf("Index %d: %f\n", i, data->harm_amps[i]);
+    }
+    getc(stdin); // eat enter
 
     return;
 }
 
-/* The engines prompt for and process user commands. */
+/* 
+   ---------------------------------------------------------------
+                              ENGINES
+   ---------------------------------------------------------------
+*/
 
 void Engine_Monophonic(paUserData *data)
 {
@@ -346,6 +401,7 @@ void Engine_Monophonic(paUserData *data)
                 // change waveform indicator
                 waveform = 's';
                 break;
+/*
             case 'C': // CREATE CUSTOM TIMBRE
                 fadeSignalOut(data);
                 // change table to sinewave for reference
@@ -353,11 +409,13 @@ void Engine_Monophonic(paUserData *data)
                     makeSine(data);
                 }
                 makeCustomUI(data);
+                makeCustom(data);
                 // change waveform indicator
                 waveform = 'c';
                 // fade signal in again
                 fadeSignalIn(data);
                 break;
+*/
             case 'z': // PRINT OPERATING INFO TO TERMINAL
                 printf("\nTo enter a command, type its letter and hit ");
                 printf("RETURN. Each command is\none symbol long.  Don't");
@@ -379,12 +437,12 @@ void Engine_Monophonic(paUserData *data)
                 printf("would have to type shift...)\n");
                 printf("     A   --->  Timbre = sine wave (default)\n");
                 printf("     S   --->  Timbre = square wave\n");
-                printf("     C   --->  Synthesize custom timbre\n");
+                //printf("     C   --->  Synthesize custom timbre\n");
                 printf("     z   --->  Print operation info to terminal\n");
                 printf("     x   --->  EXIT PROGRAM\n\n");
                 break;
             case 'p':
-                printTable(data);
+                printTableFloat(data->table, TABLE_SIZE, "WAVE TABLE: ");
                 break;
             case 'x':
                 // stops the while loop
@@ -399,12 +457,11 @@ void Engine_Monophonic(paUserData *data)
     return;
 }
 
-void error(PaError err, paUserData *data) {
-	Pa_Terminate();
-	free(data);
-	fprintf(stderr, "Error message: %s\n", Pa_GetErrorText(err));
-	exit(0);
-}
+/* 
+   ---------------------------------------------------------------
+                              MAIN
+   ---------------------------------------------------------------
+*/
 
 int main(int argc, char *argv[])
 {
