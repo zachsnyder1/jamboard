@@ -3,69 +3,11 @@ JAMBOARD
 
 OVERVIEW
 
-This is a wavetable synthesizer that allows you to play either a monophonic
-or polyphonic melody using the keys on your keyboard.  The pitch ranges four
-octaves from A-100 to A-1760, and the timbre can be sine wave, square wave,
-or a custom timbre.  There are two modes:
-
-   'c'  Continuous signal (monophonic) mode--
-          A sine/square wave or customized waveform sounds at a fixed
-          amplitude. To enter this mode, execute with 'c' as the mode argument
+This is a wavetable synthesizer that allows you to play a melody using 
+the keys on your keyboard.  The pitch ranges four octaves from A-100 to 
+A-1760, and the timbre can be sine wave or a square wave.  Invoke:
 
                    ./jamboard c
-
-          with no additional command line arguments from the directory where
-          you compiled to.
-
-   'e'  Envelope control (polyphonic) mode--
-          Attack, decay, and release are set using command line arguments.
-          Up to six notes can sound simultaneously.  If a seventh note is
-          toggled the new note will not sound, and a failure message will
-          be printed to the terminal (but the program will not crash).
-          Timbre can be sine/square wave, or a customized waveform.
-
-          There are 6 additional command line arguments:
-            1] 'initial' -> The initial amplitude value (as a percentage of
-                         maximum possible amplitude)
-            2] 'peak'    -> The peak amplitude value (as a percentage of
-                         maximum possible amplitude)
-            3] 'sustain' -> The sustained amplitude value (as a percentage of
-                         maximum possible amplitude)
-            4] 'attack'  -> Relative length of attack (values of 1-6 are
-                            appropriate, where higher value = longer attack)
-            5] 'decay'   -> Relative length of decay (values of 1-6 are
-                            appropriate, where higher value = longer decay)
-            6] 'release' -> Relative length of release (values of 1-6 are
-                            appropriate, where higher value = longer release)
-
-          Example:
-
-             ./jamboard e 0 100 30 1 1 1
-
-                        ^ ^  ^  ^  ^ ^ ^
-                        | |  |  |  | | |
-                       / /  /   |   \ \ \
-               _______/ /  /    |    \ \ \
-              /        /  /     |     \ \ \
-             V        /  /      |      | \ \
-          'mode'     /  /       |      |  \ \
-                    /  /        |      |   \ \
-                   /   |        |      |    \ \
-                  /    |        |      |     \ \
-                 /     |        |      |      \ \
-                /      |        |      |       \ \
-               /       |        |      |       |  \
-              /        |        |      |       |   \
-             |         |        |      |       |    \_____
-             |         |        |      |       |         |
-             v         v        v      v       v         v
-         'initial'  'peak'   'sus.' 'attack' 'decay'  'release'
-
-         NOTE: Initial values that are not 0 may cause a clicking sound at the
-               beggining of each note, which isn't the best for your speakers.
-               I strongly recommend using an initial value of 0.
-
-
 
 COMMANDS
 
@@ -100,26 +42,8 @@ ______________________________________________|
      =   --->  Go up an octave (if it were '+' you would have to type shift...)
      A   --->  Timbre = sine wave (default)
      S   --->  Timbre = square wave
-     C   --->  Synthesize custom timbre (SEE BELOW FOR FULL DESCRIPTION)
      z   --->  Print operation info to terminal
      x   --->  EXIT PROGRAM
-
-
-SPECIAL COMMAND: SYNTHESIZE CUSTOM TIMBRE
-
-The 'synthesize custom timbre' function allows you to synthesize a new sound by
-setting the relative amplitude for each harmonic, up to the 31st harmonic.
-Relative amplitudes are values between 0 and 100.  Enter a value for each
-harmonic as you are promted.  A value of 0 means the harmonic is not included
-in the sound.  When you have entered a value for the highest harmonic that you
-want to include, enter 's' (without quotations), and hit RETURN, to synthesize
-the sound.
-
-  LOCAL COMMANDS:
-  --------------
-    z   --->  Print custom synthesis info
-    s   --->  Synthesize waveform
-    x   --->  Abort custom timbre synthesis and return to jam
 
 
 PORTAUDIO DEPENDENCY
