@@ -2,11 +2,6 @@
  Jamboard, running MonophonicEngine.  Enjoy.
    -Z
 */
-#include <ctype.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-
 #include "jamboard.h"
 #include "engine.h"
 #include "envelope.h"
