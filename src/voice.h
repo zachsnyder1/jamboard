@@ -13,16 +13,17 @@
 
 // Voice base class
 class Voice {
-public:
-    // attributes
     bool triggered;
     float pitch_incrementer;
-    float wavetable_pos[NUM_CHANNELS];
+public:
+    // attributes
     int envelope_pos;
+    float wavetable_pos[NUM_CHANNELS];
     // methods
     Voice(float=START_NOTE);
     void advance(int);
-    void trigger(float);
+    void trigger(float, int);
+    bool is_triggered();
 };
 
 #endif /* voice_h */

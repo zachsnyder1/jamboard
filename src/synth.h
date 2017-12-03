@@ -23,6 +23,7 @@ class Synth {
 public:
     WaveTable table;
     Synth(int num_v=DEFAULT_NUM_VOICES);
+    ~Synth();
     int trigger_note(float);
     void advance();
     float output(int);

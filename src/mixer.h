@@ -24,7 +24,7 @@ public:
     void fade_in();
     void fade_out();
     void wait_for_fade();
-    float mix(int, Synth*);
+    float mix(int, Synth*, int);
     void advance();
 };
 

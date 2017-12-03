@@ -26,6 +26,7 @@ class Engine {
 protected:
     // ----- ATTRIBUTES -----
     // jamboard objects
+    int num_synths;
     Synth *synths;
     Mixer *mixer;
     UserInterface ui;
@@ -40,6 +41,7 @@ protected:
 public:
     // ----- USER METHODS -----
     Engine(int num_v=DEFAULT_NUM_VOICES, float start_note=START_NOTE);
+    ~Engine();
     void run();
     // ----- PORTAUDIO CALLBACK METHODS -----
     static int callback(const void*,

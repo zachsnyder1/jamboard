@@ -13,6 +13,7 @@
 */
 Engine::Engine(int num_v, float start_note) {
     // objects
+    this->num_synths = 1;
     this->synths = new Synth(num_v);
     this->mixer = new Mixer;
     this->outputParameters = new PaStreamParameters;
@@ -38,6 +39,15 @@ Engine::Engine(int num_v, float start_note) {
     // start stream
     this->err = Pa_StartStream(this->stream);
     if(this->err != paNoError) this->error();
+}
+
+/*
+ Engine destructor
+*/
+Engine::~Engine() {
+  delete this->synths;
+  delete this->mixer;
+  delete this->outputParameters;
 }
 
 /*
@@ -102,46 +112,46 @@ void Engine::run() {
                 envelope.
                 */
             case '`':
-                this->synths[1].trigger_note(this->calculate_note(11, octave - 1));
+                this->synths[0].trigger_note(this->calculate_note(11, octave - 1));
                 break;
             case '1':
-                this->synths[1].trigger_note(this->calculate_note(0, octave));
+                this->synths[0].trigger_note(this->calculate_note(0, octave));
                 break;
             case 'q':
-                this->synths[1].trigger_note(this->calculate_note(1, octave));
+                this->synths[0].trigger_note(this->calculate_note(1, octave));
                 break;
             case '2':
-                this->synths[1].trigger_note(this->calculate_note(2, octave));
+                this->synths[0].trigger_note(this->calculate_note(2, octave));
                 break;
             case '3':
-                this->synths[1].trigger_note(this->calculate_note(3, octave));
+                this->synths[0].trigger_note(this->calculate_note(3, octave));
                 break;
             case 'e':
-                this->synths[1].trigger_note(this->calculate_note(4, octave));
+                this->synths[0].trigger_note(this->calculate_note(4, octave));
                 break;
             case '4':
-                this->synths[1].trigger_note(this->calculate_note(5, octave));
+                this->synths[0].trigger_note(this->calculate_note(5, octave));
                 break;
             case 'r':
-                this->synths[1].trigger_note(this->calculate_note(6, octave));
+                this->synths[0].trigger_note(this->calculate_note(6, octave));
                 break;
             case '5':
-                this->synths[1].trigger_note(this->calculate_note(7, octave));
+                this->synths[0].trigger_note(this->calculate_note(7, octave));
                 break;
             case '6':
-                this->synths[1].trigger_note(this->calculate_note(8, octave));
+                this->synths[0].trigger_note(this->calculate_note(8, octave));
                 break;
             case 'y':
-                this->synths[1].trigger_note(this->calculate_note(9, octave));
+                this->synths[0].trigger_note(this->calculate_note(9, octave));
                 break;
             case '7':
-                this->synths[1].trigger_note(this->calculate_note(10, octave));
+                this->synths[0].trigger_note(this->calculate_note(10, octave));
                 break;
             case 'u':
-                this->synths[1].trigger_note(this->calculate_note(11, octave));
+                this->synths[0].trigger_note(this->calculate_note(11, octave));
                 break;
             case '8':
-                this->synths[1].trigger_note(this->calculate_note(0, octave + 1));
+                this->synths[0].trigger_note(this->calculate_note(0, octave + 1));
                 break;
             /* OCTAVE CHANGE COMMANDS: Octave is used to calculate the
                pitch incrementer for a note in a
@@ -166,19 +176,19 @@ void Engine::run() {
             // TIMBRE COMMANDS: Wavetable is rewritten to create a new timbre
             case 'A': // SINE WAVE
                 this->mixer->fade_out();
-                this->synths[1].table.sine_wave();
+                this->synths[0].table.sine_wave();
                 this->mixer->fade_in();
                 break;
             case 'S': // SQUARE WAVE
                 this->mixer->fade_out();
-                this->synths[1].table.square_wave();
+                this->synths[0].table.square_wave();
                 this->mixer->fade_in();
                 break;
             /* TODO: fix custom synth
             case 'C': // CREATE CUSTOM TIMBRE
                 this->mixer->fade_out();
                 this->ui.custom_wave(this->synths[1].table.harmonic_amplitudes);
-                this->synths[1].table.custom_wave();
+                this->synths[0].table.custom_wave();
                 this->mixer->fade_in();
                 break;
             */
@@ -207,22 +217,26 @@ int Engine::callback(const void *inputBuffer, void *outputBuffer,
                                PaStreamCallbackFlags statusFlags,
                                void *userData)
 {
-    Engine *engine = (Engine*)userData;
+    Engine *e = (Engine*)userData;
     float *out = (float*)outputBuffer;
-    int i; //for looping use...
+    int i, x; //for looping use...
     // casting the unused arguments as void to avoid 'unused' errors
     (void) timeInfo;
     (void) statusFlags;
     (void) inputBuffer;
     
     // write each frame to the output buffer
-    for(i=0; i<framesPerBuffer; i++)
+    for(i = 0; i<framesPerBuffer; i++)
     {
-        // frames alternate between left and right channels
-        *out++ = engine->mixer->mix(0, engine->synths);
-        *out++ = engine->mixer->mix(1, engine->synths);
+        // add each channel
+        for(x = 0; x < NUM_CHANNELS; x++) {
+            *out++ = e->mixer->mix(x, e->synths, e->num_synths);
+        }
         // Advance system
-        engine->mixer->advance();
+        e->mixer->advance();
+        for(x = 0; x < e->num_synths; x++) {
+            e->synths[x].advance();
+        }
     }
     return paContinue;
 }

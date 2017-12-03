@@ -20,9 +20,7 @@
 // Finite Envelope
 class Envelope {
     // envelope parameters
-    int node1;
-    int node2;
-    int node3;
+    int node1, node2, node3;
     float sustain_level;
     bool continuous;
 public:

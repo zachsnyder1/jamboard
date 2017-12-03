@@ -10,7 +10,7 @@
  Make an engine object, run it.
 */
 int main(int argc, char *argv[]) {
-
+    Engine *engine;
     int continuous = 0;
     int option;
 
@@ -22,7 +22,12 @@ int main(int argc, char *argv[]) {
                 break;
         }
     }
-    Engine *engine = new Engine;
+    
+    if(continuous) {
+        engine = new Engine(1);
+    } else {
+        engine = new Engine();
+    }
     engine->run(); // go
     delete engine;
     

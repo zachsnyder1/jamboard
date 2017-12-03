@@ -19,15 +19,23 @@ Synth::Synth(int num_v) {
 }
 
 /*
+ Synth destructor
+*/
+Synth::~Synth() {
+    delete [] this->voices;
+    delete this->envelope;
+}
+
+/*
  Trigger a note
    TAKES:
      note --> the note to trigger
 */
 int Synth::trigger_note(float note) {
-    if(this->voices[this->curr_voice].triggered) {
+    if(this->voices[this->curr_voice].is_triggered()) {
         return 1; // No free voices
     } else {
-        this->voices[this->curr_voice].trigger(note);
+        this->voices[this->curr_voice].trigger(note, this->num_voices);
         this->curr_voice++;
         this->curr_voice %= this->num_voices;
         return 0;
@@ -62,7 +70,7 @@ float Synth::output(int chann) {
     for(i = 0; i < this->num_voices; i++) {
         voice_signal = this->table.table[(int)(this->voices[i].wavetable_pos[chann])];
         envelope_signal = this->envelope->calculate(this->voices[i].envelope_pos, 
-                                                    this->voices[i].triggered);
+                                                    this->voices[i].is_triggered());
         out += (voice_signal * envelope_signal);
     }
     return out;

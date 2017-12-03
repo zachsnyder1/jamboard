@@ -25,7 +25,7 @@ Envelope::Envelope(bool continuous,
                    int s, 
                    int r, 
                    float sustain_level) {
-    this->continuous = false;
+    this->continuous = continuous;
     this->length = a + d + s + r;
     this->node1 = a;
     this->node2 = node1 + d;
@@ -47,26 +47,24 @@ float Envelope::calculate(int pos, bool triggered) {
             node_height = (double)1.0;
             node_index = pos;
             progress = (double)node_index / (double)this->node1;
-            level = (float)(progress * node_height);
+            return (float)(progress * node_height);
         } else if(pos < this->node2) {
             node_height = (double)1.0 - (double)this->sustain_level;
             node_index = pos - this->node1;
             progress = (double)node_index / ((double)(this->node2 - this->node1));
-            level = 1.0 - (progress * node_height);
+            return 1.0 - (progress * node_height);
         } else if(pos < this->node3) {
-            level = this->sustain_level;
+            return this->sustain_level;
         } else {
             node_height = (double)this->sustain_level;
             node_index = pos - this->node3;
             progress = (double)node_index / 
                        ((double)(this->length - this->node3));
-            level = this->sustain_level - (progress * node_height);
+            return this->sustain_level - (progress * node_height);
         }
     } else if(!(this->continuous)) {
-        level = 0.0;
+        return 0.0;
     } else {
-        level = 1.0;
+        return 1.0;
     }
-    
-    return level;
 }

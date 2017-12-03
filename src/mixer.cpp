@@ -39,7 +39,7 @@ void Mixer::fade_out() {
  Waits for fade
 */
 void Mixer::wait_for_fade() {
-    
+    while(this->fadein || this->fadeout) {}
 }
 
 /*
@@ -51,12 +51,12 @@ void Mixer::wait_for_fade() {
    RETURNS:
      float mixed track signals
 */
-float Mixer::mix(int chann, Synth *synths) {
+float Mixer::mix(int chann, Synth *synths, int num_synths) {
     float out = 0;
     int i;
     
     // for each infinite synth
-    for(i = 0; i < (sizeof(synths) / sizeof(Synth)); i++) {
+    for(i = 0; i < num_synths; i++) {
         out += synths[i].output(chann);
     }
     return (out * this->master);

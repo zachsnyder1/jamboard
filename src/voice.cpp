@@ -12,11 +12,14 @@ Voice::Voice(float start_note) {
     this->pitch_incrementer = start_note;
     this->triggered = false;
     this->envelope_pos = 0;
+    for(int i = 0; i < NUM_CHANNELS; i++){
+        this->wavetable_pos[i] = 0.0;
+    }
 }
 
 void Voice::advance(int envelope_len) {
     int i;
-    
+
     // advance channel positions
     for(i = 0; i < NUM_CHANNELS; i++) {
         this->wavetable_pos[i] += this->pitch_incrementer;
@@ -35,7 +38,11 @@ void Voice::advance(int envelope_len) {
     }
 }
 
-void Voice::trigger(float note) {
+void Voice::trigger(float note, int num_v) {
     this->pitch_incrementer = note;
-    this->triggered = true;
+    if(num_v > 1) this->triggered = true;
+}
+
+bool Voice::is_triggered() {
+    return this->triggered;
 }
