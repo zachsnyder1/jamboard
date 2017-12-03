@@ -93,8 +93,7 @@ void UserInterface::help() {
     std::cout << "______________________________________________|\n";
     std::cout << "\n\n   OTHER COMMANDS:\n   --------------\n";
     std::cout << "     -   --->  Go down an octave\n";
-    std::cout << "     =   --->  Go up an octave (if it were '+' you";
-    std::cout << "would have to type shift...)\n";
+    std::cout << "     =   --->  Go up an octave\n";
     std::cout << "     A   --->  Timbre = sine wave\n";
     std::cout << "     S   --->  Timbre = square wave (default)\n";
     //std::cout << "     C   --->  Synthesize custom timbre\n";
