@@ -14,6 +14,9 @@
 WaveTable::WaveTable() {
     this->table = new float[TABLE_SIZE];
     this->harmonic_amplitudes = new int[HIGHEST_HARMONIC]; // for custom synth
+    for(int i = 0; i < HIGHEST_HARMONIC; i++) {
+        this->harmonic_amplitudes[i] = 0;
+    }
     square_wave();
 }
 
@@ -63,8 +66,8 @@ void WaveTable::square_wave() {
  Populate wave table with a custom waveform
  */
 void WaveTable::custom_wave() {
-    float amplitude_scale;
-    float amplitude_total;
+    float amplitude_scale = 0.0;
+    float amplitude_total = 0.0;
     float temp_table[TABLE_SIZE];
     int target_index;
     int i, x;
@@ -72,18 +75,17 @@ void WaveTable::custom_wave() {
     // set table to reference sine wave
     this->sine_wave();
     // add harmonic amplitudes
-    amplitude_scale = 0.0;
     for(i = 0; i < HIGHEST_HARMONIC; i++) {
         amplitude_scale += this->harmonic_amplitudes[i];
     }
     // harmonics waveforms are added together, one wavetable index at a time
     for(i = 0; i < TABLE_SIZE; i++) {
-        amplitude_total = 0.0;
         for(x = 0; x < (HIGHEST_HARMONIC); x++) {
             target_index = (int)(i * pow((double)2, x));
             target_index = target_index % TABLE_SIZE;
             amplitude_total += this->table[target_index] *
-              (this->harmonic_amplitudes[x] / amplitude_scale);
+              (this->harmonic_amplitudes[x] / amplitude_scale) *
+              CUSTOM_MAX_AMP;
         }
         temp_table[i] = amplitude_total;
     }

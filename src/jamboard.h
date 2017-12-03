@@ -10,6 +10,7 @@
 #define jamboard_h
 
 #define SQUARE_MAX_AMP (0.05)
+#define CUSTOM_MAX_AMP (0.01)
 #define SINE_MAX_AMP (0.5)
 #define START_NOTE (2.0275)
 #define SAMPLE_RATE (44100)

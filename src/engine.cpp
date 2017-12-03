@@ -184,14 +184,12 @@ void Engine::run() {
                 this->synths[0].table.square_wave();
                 this->mixer->fade_in();
                 break;
-            /* TODO: fix custom synth
             case 'C': // CREATE CUSTOM TIMBRE
                 this->mixer->fade_out();
-                this->ui.custom_wave(this->synths[1].table.harmonic_amplitudes);
+                this->ui.custom_wave(this->synths[0].table.harmonic_amplitudes);
                 this->synths[0].table.custom_wave();
                 this->mixer->fade_in();
                 break;
-            */
             case 'z': // PRINT OPERATING INFO TO TERMINAL
                 this->ui.help();
                 break;

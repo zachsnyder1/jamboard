@@ -19,7 +19,8 @@ char UserInterface::get_input() {
 
 void UserInterface::custom_wave(int *harmonic_amplitudes) {
     // setup local variables
-    char command_check;
+    std::string command_str;
+    int command = 0;
     int loop = 1;
     int x = 0;
     
@@ -28,38 +29,54 @@ void UserInterface::custom_wave(int *harmonic_amplitudes) {
     std::cout << "type 'z' and hit RETURN for custom synthesis info\n";
     std::cout << "type 'x' and hit RETURN to abort custom timbre and return to jam\n";
     std::cout << "type 's' and hit RETURN to synthesize timbre and return to jam\n\n";
-    std::cout << "Enter amplitude of each harmonic:";
+    std::cout << "Enter amplitude of each harmonic:\n";
     // PROMPT FOR, PROCESS, AND STORE USER INPUT
     while(loop) {
         // prompt for and then store input value
         if(x == 0) {
-            std::cout << "\n  Fundamental: ";
+            std::cout << "  Fundamental: ";
         } else {
             std::cout << "  Hamonic " << x << ": ";
         }
-        // get a char
-        fscanf(stdin, "%s", &command_check);
-        // process input (commands and errors)
-        if(command_check == 'z') { // COMMAND: print info
-            this->help();
-        } else if(command_check == 'x') { // COMMAND: abort custom timbre synthesis
-            std::cout << "\n\nCUSTOM TIMBRE SYNTHESIS ABORTED\n\n";
-            getc(stdin);  // eat enter
+        // get command
+        std::getline(std::cin, command_str);
+        command = std::atoi(command_str.c_str());
+        // validate not empty input
+        if(command_str.length() < 1) {
+            std::cout << "\n\tERROR: invalid command/value\n";
+            std::cout << "\t       amplitudes are {0 <= a <= 100}\n";
+            std::cout << "\t       enter 'z' for custom synthesis help\n\n";
+        // COMMAND 'z': print help
+        } else if(command_str[0] == 'z') {
+            std::cout << "\n   Enter the amplitude {0 <= a <= 100} of each\n";
+            std::cout << "   harmonic, starting with the fundamental.  You can\n";
+            std::cout << "   synthesize at any point with the 's' command.\n\n";
+            std::cout << "         COMMANDS:\n         --------\n";
+            std::cout << "     s   --->  Synthesize waveform\n";
+            std::cout << "     z   --->  Print help\n";
+            std::cout << "     x   --->  Abort custom synthesis\n\n";
+        // COMMAND 'x': abort custom timbre synthesis
+        } else if(command_str[0] == 'x') {
+            std::cout << "\nCUSTOM TIMBRE SYNTHESIS ABORTED\n";
+            loop = 0;
             return;
-        } else if(command_check == 's' && x == 0) { // ERROR: need more user info
-            std::cout << "\n\tERROR: Enter amplitude for one or more frequency\n";
-        } else if(command_check == 's' || x >= HIGHEST_HARMONIC-1) { // COMMAND: synthesize
+        // COMMAND 's' without input: need more user info
+        } else if(command_str[0] == 's' && x == 0) {
+            std::cout << "\n\n\tERROR: Enter amplitude for one or more frequency\n\n";
+        // COMMAND 's': synthesize
+        } else if(command_str[0] == 's' || (x >= (HIGHEST_HARMONIC-1))) {
             std::cout << "\n";
-            return;
-        } else if(atoi(&command_check) > 100) { // ERROR: invalid amplitude value
-            std::cout << "\n\tERROR: Amplitude needs to be 0<=X<=100\n";
-        } else { // STORE USER INPUT, PROMPT FOR NEXT HARMONIC
-            // store in amplitude array
-            harmonic_amplitudes[x] = (float)atoi(&command_check);
+            loop = 0;
+        // STORE USER INPUT, PROMPT FOR NEXT HARMONIC
+        } else if((command >= 0) && (command <= 100)) {
+            harmonic_amplitudes[x] = command;
             x++;
+        // ERROR: invalid input
+        } else if((command < 0) || (command > 100)) {
+            std::cout << "\tERROR: amplitudes are {0 <= X <= 100}\n";
         }
     }
-    getc(stdin); // eat enter
+    std::cin.clear();
     return;
 }
 
@@ -78,7 +95,7 @@ void UserInterface::farewell() {
 
 void UserInterface::help() {
     std::cout << "\nTo enter a command, type its letter and hit ";
-    std::cout << "RETURN. Each command is\none symbol long.  Don't";
+    std::cout << "RETURN. Each command is\none symbol long.  Don't ";
     std::cout << "include quotations or brackets.\n\n\n";
     std::cout << "      PARTIAL SCHEMATIC OF KEYBOARD:\n\n";
     std::cout << "---------------- KEYS: -----------------------|\n";
@@ -96,7 +113,7 @@ void UserInterface::help() {
     std::cout << "     =   --->  Go up an octave\n";
     std::cout << "     A   --->  Timbre = sine wave\n";
     std::cout << "     S   --->  Timbre = square wave (default)\n";
-    //std::cout << "     C   --->  Synthesize custom timbre\n";
+    std::cout << "     C   --->  Timbre = custom waveform\n";
     std::cout << "     z   --->  Print help\n";
     std::cout << "     x   --->  EXIT PROGRAM\n\n";
 }
