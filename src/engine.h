@@ -14,6 +14,7 @@
 #include "mixer.h"
 #include "envelope.h"
 #include "ui.h"
+#include "synth.h"
 
 /* Define base pitches so that the pitch can be calculated for any note in any
  octave using the relatively simple switch board in each engine. */
@@ -21,16 +22,15 @@ static float BASE_HZ[] = {27.5, 29.14, 30.87, 32.7, 34.65, 36.71, 38.89, 41.2,
     43.65, 46.25, 49, 51.91};
 
 // Engine class
-template<class EnvelopeType>
 class Engine {
 protected:
     // ----- ATTRIBUTES -----
     // jamboard objects
-    WaveTable table;
-    Mixer<EnvelopeType> *mixer;
+    Synth *synths;
+    Mixer *mixer;
     UserInterface ui;
     // portaudio objects
-    PaStreamParameters outputParameters; //struct for stream parameters
+    PaStreamParameters *outputParameters; //struct for stream parameters
     PaStream *stream;
     PaError err;
     // housekeeping

@@ -17,47 +17,23 @@
 
 #include "jamboard.h"
 
-template <class EnvelopeType> class Voice; // forward declaration for friend statment
-
-// Envelope base class
-class Envelope {
-protected:
-    template <class EnvelopeType> friend class Voice;
-    bool triggered;
-    int curr_position;
-    float level;
-public:
-    Envelope();
-    float get_level();
-    // ABSTRACT METHODS
-    void trigger();
-    void advance();
-};
-
-// Infinite Envelope
-class InfiniteEnvelope : public Envelope {
-public:
-    InfiniteEnvelope();
-};
-
 // Finite Envelope
-class FiniteEnvelope : public Envelope {
+class Envelope {
     // envelope parameters
-    int length; // in samples
     int node1;
     int node2;
     int node3;
     float sustain_level;
+    bool continuous;
 public:
-    FiniteEnvelope(int a=DEFAULT_ATTACK, 
-                   int d=DEFAULT_DECAY, 
-                   int s=DEFAULT_SUSTAIN, 
-                   int r=DEFAULT_RELEASE, 
-                   float sustain_level=DEFAULT_SUSTAIN_LEVEL);
-    void update_level();
-    // CONCRETE METHODS
-    void trigger();
-    void advance();
+    int length; // in samples
+    Envelope(bool continuous=false,
+             int a=DEFAULT_ATTACK, 
+             int d=DEFAULT_DECAY, 
+             int s=DEFAULT_SUSTAIN, 
+             int r=DEFAULT_RELEASE, 
+             float sustain_level=DEFAULT_SUSTAIN_LEVEL);
+    float calculate(int, bool);
 };
 
 #endif /* envelope_h */

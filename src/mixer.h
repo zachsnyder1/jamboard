@@ -10,27 +10,21 @@
 #define mixer_h
 
 #include "jamboard.h"
-#include "voice.h"
-#include "envelope.h"
-#include "wavetable.h"
+#include "synth.h"
+
+#define FADE_INCREMENT (0.00003)
 
 // Mixer base class
-template<class EnvelopeType>
 class Mixer {
-    Voice<EnvelopeType> *voices;
-    float level;
-    int curr_voice;
-    int num_voices;
-    // fade controls
+    float master;
     bool fadein;
     bool fadeout;
 public:
-    Mixer(int num_v=DEFAULT_NUM_VOICES);
+    Mixer();
     void fade_in();
     void fade_out();
     void wait_for_fade();
-    int trigger_note(float);
-    float mix(int, WaveTable*);
+    float mix(int, Synth*);
     void advance();
 };
 

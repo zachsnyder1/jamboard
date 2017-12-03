@@ -11,26 +11,24 @@
 /*
  Engine constructor
 */
-template<class EnvelopeType>
-Engine<EnvelopeType>::Engine(int num_v, float start_note) {
+Engine::Engine(int num_v, float start_note) {
     // objects
-    this->table = WaveTable();
-    this->mixer = new Mixer<EnvelopeType>(num_v);
-    this->ui = UserInterface();
-    //this->outputParameters = PaStreamParameters();
+    this->synths = new Synth(num_v);
+    this->mixer = new Mixer;
+    this->outputParameters = new PaStreamParameters;
     this->err = Pa_Initialize();
     if(this->err != paNoError) this->error();
     // setup output parameters for Pa_OpenStream()
-    this->outputParameters.device = Pa_GetDefaultOutputDevice();
-    this->outputParameters.channelCount = 2; // stereo
-    this->outputParameters.sampleFormat = paFloat32; // 32 bit floating point samples
-    this->outputParameters.suggestedLatency = Pa_GetDeviceInfo(this->outputParameters.device)->
+    this->outputParameters->device = Pa_GetDefaultOutputDevice();
+    this->outputParameters->channelCount = 2; // stereo
+    this->outputParameters->sampleFormat = paFloat32; // 32 bit floating point samples
+    this->outputParameters->suggestedLatency = Pa_GetDeviceInfo(this->outputParameters->device)->
       defaultLowOutputLatency;
-    this->outputParameters.hostApiSpecificStreamInfo = NULL;
+    this->outputParameters->hostApiSpecificStreamInfo = NULL;
     // open stream
     this->err = Pa_OpenStream(&(this->stream),
                               NULL,
-                              &(this->outputParameters),
+                              this->outputParameters,
                               SAMPLE_RATE,
                               FRAMES_PER_BUFFER,
                               paClipOff,
@@ -47,16 +45,14 @@ Engine<EnvelopeType>::Engine(int num_v, float start_note) {
    TAKES:
      
 */
-template<class EnvelopeType>
-float Engine<EnvelopeType>::calculate_note(int base_index, int octave) {
+float Engine::calculate_note(int base_index, int octave) {
     return (float)((BASE_HZ[base_index] * pow((double)2, (double)(octave))) / 110);
 }
 
 /*
  Clean exit
 */
-template<class EnvelopeType>
-void Engine<EnvelopeType>::error() {
+void Engine::error() {
     Pa_Terminate();
     this->ui.error(Pa_GetErrorText(this->err));
     exit(0);
@@ -65,8 +61,7 @@ void Engine<EnvelopeType>::error() {
 /*
  Clean your room
 */
-template<class EnvelopeType>
-void Engine<EnvelopeType>::end() {
+void Engine::end() {
     // stream is stopped
     this->err = Pa_StopStream(this->stream);
     if(this->err != paNoError) this->error();
@@ -83,8 +78,7 @@ void Engine<EnvelopeType>::end() {
 /*
  Run engine loop: get user commands, execute commands.
 */
-template<class EnvelopeType>
-void Engine<EnvelopeType>::run() {
+void Engine::run() {
     // salutation
     this->ui.salutation();
     // set up some local variables
@@ -108,46 +102,46 @@ void Engine<EnvelopeType>::run() {
                 envelope.
                 */
             case '`':
-                this->mixer->trigger_note(this->calculate_note(11, octave - 1));
+                this->synths[1].trigger_note(this->calculate_note(11, octave - 1));
                 break;
             case '1':
-                this->mixer->trigger_note(this->calculate_note(0, octave));
+                this->synths[1].trigger_note(this->calculate_note(0, octave));
                 break;
             case 'q':
-                this->mixer->trigger_note(this->calculate_note(1, octave));
+                this->synths[1].trigger_note(this->calculate_note(1, octave));
                 break;
             case '2':
-                this->mixer->trigger_note(this->calculate_note(2, octave));
+                this->synths[1].trigger_note(this->calculate_note(2, octave));
                 break;
             case '3':
-                this->mixer->trigger_note(this->calculate_note(3, octave));
+                this->synths[1].trigger_note(this->calculate_note(3, octave));
                 break;
             case 'e':
-                this->mixer->trigger_note(this->calculate_note(4, octave));
+                this->synths[1].trigger_note(this->calculate_note(4, octave));
                 break;
             case '4':
-                this->mixer->trigger_note(this->calculate_note(5, octave));
+                this->synths[1].trigger_note(this->calculate_note(5, octave));
                 break;
             case 'r':
-                this->mixer->trigger_note(this->calculate_note(6, octave));
+                this->synths[1].trigger_note(this->calculate_note(6, octave));
                 break;
             case '5':
-                this->mixer->trigger_note(this->calculate_note(7, octave));
+                this->synths[1].trigger_note(this->calculate_note(7, octave));
                 break;
             case '6':
-                this->mixer->trigger_note(this->calculate_note(8, octave));
+                this->synths[1].trigger_note(this->calculate_note(8, octave));
                 break;
             case 'y':
-                this->mixer->trigger_note(this->calculate_note(9, octave));
+                this->synths[1].trigger_note(this->calculate_note(9, octave));
                 break;
             case '7':
-                this->mixer->trigger_note(this->calculate_note(10, octave));
+                this->synths[1].trigger_note(this->calculate_note(10, octave));
                 break;
             case 'u':
-                this->mixer->trigger_note(this->calculate_note(11, octave));
+                this->synths[1].trigger_note(this->calculate_note(11, octave));
                 break;
             case '8':
-                this->mixer->trigger_note(this->calculate_note(0, octave + 1));
+                this->synths[1].trigger_note(this->calculate_note(0, octave + 1));
                 break;
             /* OCTAVE CHANGE COMMANDS: Octave is used to calculate the
                pitch incrementer for a note in a
@@ -172,19 +166,19 @@ void Engine<EnvelopeType>::run() {
             // TIMBRE COMMANDS: Wavetable is rewritten to create a new timbre
             case 'A': // SINE WAVE
                 this->mixer->fade_out();
-                this->table.sine_wave();
+                this->synths[1].table.sine_wave();
                 this->mixer->fade_in();
                 break;
             case 'S': // SQUARE WAVE
                 this->mixer->fade_out();
-                this->table.square_wave();
+                this->synths[1].table.square_wave();
                 this->mixer->fade_in();
                 break;
             /* TODO: fix custom synth
             case 'C': // CREATE CUSTOM TIMBRE
                 this->mixer->fade_out();
-                this->ui.custom_wave(this->table.harmonic_amplitudes);
-                this->table.custom_wave();
+                this->ui.custom_wave(this->synths[1].table.harmonic_amplitudes);
+                this->synths[1].table.custom_wave();
                 this->mixer->fade_in();
                 break;
             */
@@ -207,8 +201,7 @@ void Engine<EnvelopeType>::run() {
 /*
  Callback used by PortAudio
  */
-template<class EnvelopeType>
-int Engine<EnvelopeType>::callback(const void *inputBuffer, void *outputBuffer,
+int Engine::callback(const void *inputBuffer, void *outputBuffer,
                                unsigned long framesPerBuffer,
                                const PaStreamCallbackTimeInfo *timeInfo,
                                PaStreamCallbackFlags statusFlags,
@@ -226,13 +219,10 @@ int Engine<EnvelopeType>::callback(const void *inputBuffer, void *outputBuffer,
     for(i=0; i<framesPerBuffer; i++)
     {
         // frames alternate between left and right channels
-        *out++ = engine->mixer->mix(0, &engine->table);
-        *out++ = engine->mixer->mix(1, &engine->table);
+        *out++ = engine->mixer->mix(0, engine->synths);
+        *out++ = engine->mixer->mix(1, engine->synths);
         // Advance system
         engine->mixer->advance();
     }
     return paContinue;
 }
-
-template class Engine<InfiniteEnvelope>;
-template class Engine<FiniteEnvelope>;

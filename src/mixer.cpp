@@ -11,21 +11,16 @@
 /*
  Mixer default constructor
 */
-template<class EnvelopeType>
-Mixer<EnvelopeType>::Mixer(int num_v) {
-    this->level = 0.0;
-    this->curr_voice = 0;
+Mixer::Mixer() {
+    this->master = 0.0;
     this->fadein = false;
     this->fadeout = false;
-    this->num_voices = num_v;
-    this->voices = new Voice<EnvelopeType>[num_voices];
 }
 
 /*
  Fade in signal amplitude
 */
-template<class EnvelopeType>
-void Mixer<EnvelopeType>::fade_in() {
+void Mixer::fade_in() {
     if(this->fadeout) this->fadeout = false;
     this->fadein = true;
     this->wait_for_fade();
@@ -34,8 +29,7 @@ void Mixer<EnvelopeType>::fade_in() {
 /*
  Fade out signal amplitude
 */
-template<class EnvelopeType>
-void Mixer<EnvelopeType>::fade_out() {
+void Mixer::fade_out() {
     if(this->fadein) this->fadein = false;
     this->fadeout = true;
     this->wait_for_fade();
@@ -44,70 +38,44 @@ void Mixer<EnvelopeType>::fade_out() {
 /*
  Waits for fade
 */
-template<class EnvelopeType>
-void Mixer<EnvelopeType>::wait_for_fade() {
-    while(this->fadein || this->fadeout){}
+void Mixer::wait_for_fade() {
+    
 }
 
 /*
- Trigger a note
-   TAKES:
-     note --> the note to trigger
-*/
-template<class EnvelopeType>
-int Mixer<EnvelopeType>::trigger_note(float note) {
-    if(this->voices[this->curr_voice].is_triggered()) {
-        return 1; // No free voices
-    } else {
-      this->voices[this->curr_voice].trigger(note);
-      this->curr_voice++;
-      this->curr_voice %= this->num_voices;
-      return 0;
-    }
-}
-
-/*
- Mix all voices on specified channel
+ Mix all tracks on specified channel
    TAKES:
      chann --> int channel to mix
+     table --> ptr WaveTable object
+     tracks --> array of Track objects
    RETURNS:
-     float added voices
+     float mixed track signals
 */
-template<class EnvelopeType>
-float Mixer<EnvelopeType>::mix(int chann, WaveTable *table) {
-    float master = 0;
+float Mixer::mix(int chann, Synth *synths) {
+    float out = 0;
     int i;
     
-    for(i = 0; i < this->num_voices; i++) {
-        master += this->voices[i].get_signal(chann, table);
+    // for each infinite synth
+    for(i = 0; i < (sizeof(synths) / sizeof(Synth)); i++) {
+        out += synths[i].output(chann);
     }
-    master *= this->level;
-    return master;
+    return (out * this->master);
 }
 
 /*
- Advance all voices.
+ Handle fading.
 */
-template<class EnvelopeType>
-void Mixer<EnvelopeType>::advance() {
+void Mixer::advance() {
     int i;
-    
-    // advance voices
-    for(i = 0; i < this->num_voices; i++) {
-        this->voices[i].advance();
-    }
-    // handle fade
-    if(this->fadein && (this->level < 1.0)) {
-        this->level += 0.00003;
+
+    if(this->fadein && (this->master < 1.0)) {
+        this->master += FADE_INCREMENT;
     } else {
         this->fadein = false;
     }
-    if(this->fadeout && (this->level > 0.0)) {
-        this->level -= 0.00003;
+    if(this->fadeout && (this->master > 0.0)) {
+        this->master -= FADE_INCREMENT;
     } else {
         this->fadeout = false;
     }
 }
-
-template class Mixer<InfiniteEnvelope>;
-template class Mixer<FiniteEnvelope>;

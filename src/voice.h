@@ -10,22 +10,19 @@
 #define voice_h
 
 #include "jamboard.h"
-#include "wavetable.h"
-#include "envelope.h"
 
 // Voice base class
-template <class EnvelopeType>
 class Voice {
-    float pitch_incrementer;
-    float channel_positions[NUM_CHANNELS];
-    EnvelopeType envelope;
 public:
-    Voice();
-    Voice(float);
-    float get_signal(int, WaveTable*);
-    void advance();
+    // attributes
+    bool triggered;
+    float pitch_incrementer;
+    float wavetable_pos[NUM_CHANNELS];
+    int envelope_pos;
+    // methods
+    Voice(float=START_NOTE);
+    void advance(int);
     void trigger(float);
-    bool is_triggered();
 };
 
 #endif /* voice_h */

@@ -8,47 +8,34 @@
 
 #include "voice.h"
 
-template<class EnvelopeType>
-Voice<EnvelopeType>::Voice() {
-    this->pitch_incrementer = START_NOTE;
-}
-
-template<class EnvelopeType>
-Voice<EnvelopeType>::Voice(float start_note) {
+Voice::Voice(float start_note) {
     this->pitch_incrementer = start_note;
+    this->triggered = false;
+    this->envelope_pos = 0;
 }
 
-template<class EnvelopeType>
-float Voice<EnvelopeType>::get_signal(int chann, WaveTable *table) {
-    float signal = table->table[(int)this->channel_positions[chann]];
-    return (signal * this->envelope.get_level());
-}
-
-template<class EnvelopeType>
-void Voice<EnvelopeType>::advance() {
+void Voice::advance(int envelope_len) {
     int i;
     
     // advance channel positions
     for(i = 0; i < NUM_CHANNELS; i++) {
-        this->channel_positions[i] += this->pitch_incrementer;
-        if(this->channel_positions[i] > TABLE_SIZE) {
-            this->channel_positions[i] -=  TABLE_SIZE;
+        this->wavetable_pos[i] += this->pitch_incrementer;
+        if(this->wavetable_pos[i] > TABLE_SIZE) {
+            this->wavetable_pos[i] -=  TABLE_SIZE;
         }
     }
-    // advance envelope
-    this->envelope.advance();
+    // advance envelope position
+    if(this->triggered) {
+        if(this->envelope_pos >= envelope_len) {
+            this->triggered = false;
+            this->envelope_pos = 0;
+        } else {
+            this->envelope_pos++;
+        }
+    }
 }
 
-template<class EnvelopeType>
-void Voice<EnvelopeType>::trigger(float note) {
+void Voice::trigger(float note) {
     this->pitch_incrementer = note;
-    this->envelope.trigger();
+    this->triggered = true;
 }
-
-template<class EnvelopeType>
-bool Voice<EnvelopeType>::is_triggered() {
-    return this->envelope.triggered;
-}
-
-template class Voice<InfiniteEnvelope>;
-template class Voice<FiniteEnvelope>;

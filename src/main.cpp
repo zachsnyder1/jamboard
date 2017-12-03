@@ -22,13 +22,9 @@ int main(int argc, char *argv[]) {
                 break;
         }
     }
-    // init correct engine
-    if(continuous) {
-        Engine<InfiniteEnvelope> engine = Engine<InfiniteEnvelope>(1);
-        engine.run(); // go
-    } else {
-        Engine<FiniteEnvelope> engine = Engine<FiniteEnvelope>();
-        engine.run(); // go
-    }
+    Engine *engine = new Engine;
+    engine->run(); // go
+    delete engine;
+    
     return 0;
 }
