@@ -1,6 +1,6 @@
 //
 //  ui.cpp
-//  jamboard
+//  little-daw
 //
 //  Created by Zach Snyder on 11/26/17.
 //  Copyright © 2017 Zach Snyder. All rights reserved.
@@ -82,7 +82,7 @@ void UserInterface::custom_wave(int *harmonic_amplitudes) {
 
 void UserInterface::salutation() {
     std::cout << "\n---------------------------------------------------------------";
-    std::cout << "\n\t\tJAMBOARD WAVETABLE SYNTHESIS";
+    std::cout << "\n\t\tLITTLE-DAW WAVETABLE SYNTHESIS";
     std::cout << "\n---------------------------------------------------------------\n";
     std::cout << "\ntype 'z' and hit RETURN for operating info";
     std::cout << "\ntype 'x' and hit RETURN to exit program";

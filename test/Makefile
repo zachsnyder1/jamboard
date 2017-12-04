@@ -4,7 +4,7 @@
 # Remember to tweak this if you move this file.
 GTEST_DIR = ../../googletest/googletest
 
-# jamboard code
+# little-daw code
 SRC_DIR = ../src
 TEST_DIR = .
 

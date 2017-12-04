@@ -1,6 +1,6 @@
 //
 //  ui.h
-//  jamboard
+//  little-daw
 //
 //  Created by Zach Snyder on 11/26/17.
 //  Copyright © 2017 Zach Snyder. All rights reserved.
@@ -9,7 +9,7 @@
 #ifndef ui_h
 #define ui_h
 
-#include "jamboard.h"
+#include "littledaw.h"
 
 class UserInterface {
 public:

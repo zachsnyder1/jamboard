@@ -1,6 +1,6 @@
 //
 //  synth.h
-//  jamboard
+//  little-daw
 //
 //  Created by Zach Snyder on 11/26/17.
 //  Copyright © 2017 Zach Snyder. All rights reserved.
@@ -9,7 +9,7 @@
 #ifndef synth_h
 #define synth_h
 
-#include "jamboard.h"
+#include "littledaw.h"
 #include "voice.h"
 #include "envelope.h"
 #include "wavetable.h"

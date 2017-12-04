@@ -1,8 +1,11 @@
-/*
- Jamboard, running MonophonicEngine.  Enjoy.
-   -Z
-*/
-#include "jamboard.h"
+//
+//  littledaw.h
+//  little-daw
+//
+//  Created by Zach Snyder on 11/26/17.
+//  Copyright © 2017 Zach Snyder. All rights reserved.
+//
+#include "littledaw.h"
 #include "engine.h"
 #include "envelope.h"
 

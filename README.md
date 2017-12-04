@@ -1,21 +1,36 @@
-# JAMBOARD
+# LITTLE-DAW
 
-## OVERVIEW
+## THE VISION
 
-A command line wavetable synthesizer that allows you to play a melody using 
-the keys on your keyboard.  The pitch ranges four octaves from A-100 to 
-A-1760, and the timbre can be a sine wave or a square wave.
+A light-weight, headless audio workstation with basic synthesis, processing,
+and sampling utilities, small enough to run on Raspberry Pi.
+
+## CURRENT STATUS
+
+So far little-daw is a minimal skeleton, with one wavetable synthesizer 
+that allows you to play a melody using the keys on your keyboard.  The 
+pitch ranges four octaves from A-100 to A-1760, and the timbre can be a 
+sine wave, square wave, or custom waveform built based on the amplitudes
+of the fundamental and the first X harmonics.
+
+
+## COMPILING
+
+Compile from the /src directory.  You may need to explicitly link to the
+'portaudio' library. If you use g++, compilation may look like this:
+
+	      g++ *.cpp -lportaudio -o littledaw
 
 
 ## INVOKING
 
 In (default) polyphonic mode:
 
-        ./jamboard
+        ./littledaw
 
 In continuous signal mode:
 
-        ./jamboard -c
+        ./littledaw -c
 
 
 ## COMMANDS
@@ -60,14 +75,6 @@ it if you are building this project.  On OSX, with brew, it is easy:
 Otherwise, you can download a release from the PortAudio website:
 
         http://portaudio.com/download.html
-
-
-## COMPILING
-
-Compile from the /src directory.  You may need to explicitly link to the
-'portaudio' library. If you use g++, compilation may look like this:
-
-	      g++ *.cpp -lportaudio -o jamboard
 
 
 ## LICENSE

@@ -1,6 +1,6 @@
 //
 //  voice.h
-//  jamboard
+//  little-daw
 //
 //  Created by Zach Snyder on 11/26/17.
 //  Copyright © 2017 Zach Snyder. All rights reserved.
@@ -9,7 +9,7 @@
 #ifndef voice_h
 #define voice_h
 
-#include "jamboard.h"
+#include "littledaw.h"
 
 // Voice base class
 class Voice {

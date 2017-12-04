@@ -1,6 +1,6 @@
 //
 //  mixer.h
-//  jamboard
+//  little-daw
 //
 //  Created by Zach Snyder on 11/26/17.
 //  Copyright © 2017 Zach Snyder. All rights reserved.
@@ -9,7 +9,7 @@
 #ifndef mixer_h
 #define mixer_h
 
-#include "jamboard.h"
+#include "littledaw.h"
 #include "synth.h"
 
 #define FADE_INCREMENT (0.00003)

@@ -1,6 +1,6 @@
 //
 //  envelope.h
-//  jamboard
+//  little-daw
 //
 //  Created by Zach Snyder on 11/26/17.
 //  Copyright © 2017 Zach Snyder. All rights reserved.
@@ -15,7 +15,7 @@
 #define DEFAULT_RELEASE (50000)
 #define DEFAULT_SUSTAIN_LEVEL (0.5)
 
-#include "jamboard.h"
+#include "littledaw.h"
 
 // Finite Envelope
 class Envelope {

@@ -1,6 +1,6 @@
 //
 //  engine.h
-//  jamboard
+//  little-daw
 //
 //  Created by Zach Snyder on 11/26/17.
 //  Copyright © 2017 Zach Snyder. All rights reserved.
@@ -9,7 +9,7 @@
 #ifndef engine_h
 #define engine_h
 
-#include "jamboard.h"
+#include "littledaw.h"
 #include "wavetable.h"
 #include "mixer.h"
 #include "envelope.h"
@@ -25,7 +25,6 @@ static float BASE_HZ[] = {27.5, 29.14, 30.87, 32.7, 34.65, 36.71, 38.89, 41.2,
 class Engine {
 protected:
     // ----- ATTRIBUTES -----
-    // jamboard objects
     int num_synths;
     Synth *synths;
     Mixer *mixer;

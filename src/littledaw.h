@@ -1,13 +1,13 @@
 //
-//  jamboard.h
-//  jamboard
+//  littledaw.h
+//  little-daw
 //
 //  Created by Zach Snyder on 11/26/17.
 //  Copyright © 2017 Zach Snyder. All rights reserved.
 //
 
-#ifndef jamboard_h
-#define jamboard_h
+#ifndef littledaw_h
+#define littledaw_h
 
 #define SQUARE_MAX_AMP (0.05)
 #define CUSTOM_MAX_AMP (0.01)
@@ -34,4 +34,4 @@
 #include <math.h>
 #include "portaudio.h"
 
-#endif
+#endif  // littledaw_h
