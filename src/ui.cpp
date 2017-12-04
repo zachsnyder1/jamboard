@@ -85,8 +85,7 @@ void UserInterface::salutation() {
     std::cout << "\n\t\tLITTLE-DAW WAVETABLE SYNTHESIS";
     std::cout << "\n---------------------------------------------------------------\n";
     std::cout << "\ntype 'z' and hit RETURN for operating info";
-    std::cout << "\ntype 'x' and hit RETURN to exit program";
-    std::cout << "\nSTREAM OPEN\n\n";
+    std::cout << "\ntype 'x' and hit RETURN to exit program\n\n";
 }
 
 void UserInterface::farewell() {

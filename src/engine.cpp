@@ -97,7 +97,7 @@ void Engine::run() {
     int octave = 3;
     
     // print engine info
-    this->ui.info("ENGINE INITIATED: monophonic (continuous signal)");
+    this->ui.info("ENGINE RUNNING");
     this->ui.info("PROCEED TO JAM\n");
     this->mixer->fade_in();
     // this loop continues to ask for user input, and executes user commands
