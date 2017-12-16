@@ -51,13 +51,13 @@ void Mixer::wait_for_fade() {
    RETURNS:
      float mixed track signals
 */
-float Mixer::mix(int chann, Synth *synths, int num_synths) {
+float Mixer::mix(int chann, std::vector<Instrument*> instruments) {
     float out = 0;
     int i;
     
     // for each infinite synth
-    for(i = 0; i < num_synths; i++) {
-        out += synths[i].output(chann);
+    for(i = 0; i < instruments.size(); i++) {
+        out += instruments[i]->output(chann);
     }
     return (out * this->master);
 }

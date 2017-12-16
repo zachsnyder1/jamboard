@@ -9,12 +9,18 @@
 #include "engine.h"
 
 /*
+ Mapping struct for Instruments
+*/
+struct Mapping {
+    Controller *controller;
+    Instrument *instrument;
+};
+
+/*
  Engine constructor
 */
-Engine::Engine(int num_v, float start_note) {
+Engine::Engine() {
     // objects
-    this->num_synths = 1;
-    this->synths = new Synth(num_v);
     this->mixer = new Mixer;
     this->outputParameters = new PaStreamParameters;
     this->err = Pa_Initialize();
@@ -23,7 +29,8 @@ Engine::Engine(int num_v, float start_note) {
     this->outputParameters->device = Pa_GetDefaultOutputDevice();
     this->outputParameters->channelCount = 2; // stereo
     this->outputParameters->sampleFormat = paFloat32; // 32 bit floating point samples
-    this->outputParameters->suggestedLatency = Pa_GetDeviceInfo(this->outputParameters->device)->
+    this->outputParameters->suggestedLatency = Pa_GetDeviceInfo(
+                                               this->outputParameters->device)->
       defaultLowOutputLatency;
     this->outputParameters->hostApiSpecificStreamInfo = NULL;
     // open stream
@@ -45,18 +52,35 @@ Engine::Engine(int num_v, float start_note) {
  Engine destructor
 */
 Engine::~Engine() {
-  delete this->synths;
   delete this->mixer;
   delete this->outputParameters;
+  for(int i = 0; i < this->mappings.size(); i++) {
+      delete this->mappings[i];
+  }
 }
 
 /*
- Calculates a note frequency
-   TAKES:
-     
+ Register an instrument with the engine
 */
-float Engine::calculate_note(int base_index, int octave) {
-    return (float)((BASE_HZ[base_index] * pow((double)2, (double)(octave))) / 110);
+void Engine::add_instrument(Instrument *instrument) {
+    this->instruments.push_back(instrument);
+}
+
+/*
+ Register a controller with the engine
+*/
+void Engine::add_controller(Controller *controller) {
+    this->controllers.push_back(controller);
+}
+
+/*
+ Map a controller to an instrument
+*/
+void Engine::map_controller(Controller *c, Instrument *i) {
+    Mapping *m = new Mapping();
+    m->controller = c;
+    m->instrument = i;
+    this->mappings.push_back(m);
 }
 
 /*
@@ -64,7 +88,9 @@ float Engine::calculate_note(int base_index, int octave) {
 */
 void Engine::error() {
     Pa_Terminate();
-    this->ui.error(Pa_GetErrorText(this->err));
+    for(int i = 0; i < this->controllers.size(); i++) {
+        this->controllers[i]->error(Pa_GetErrorText(this->err));
+    }
     exit(0);
 }
 
@@ -82,126 +108,32 @@ void Engine::end() {
     this->err = Pa_Terminate();
     if(this->err != paNoError) this->error();
     // farewell
-    this->ui.farewell();
+    for(int i = 0; i < this->controllers.size(); i++) {
+        this->controllers[i]->farewell();
+    }
 }
 
 /*
  Run engine loop: get user commands, execute commands.
 */
 void Engine::run() {
-    // salutation
-    this->ui.salutation();
-    // set up some local variables
-    char command;
+    int i;
+    Mapping *m;
     bool loop = true;
-    int octave = 3;
     
-    // print engine info
-    this->ui.info("ENGINE RUNNING");
-    this->ui.info("PROCEED TO JAM\n");
     this->mixer->fade_in();
-    // this loop continues to ask for user input, and executes user commands
+    for(i = 0; i < this->controllers.size(); i++) {
+        this->controllers[i]->salutation();
+    }
+    // get input from all controllers, process
     while(loop) {
-        command = this->ui.get_input();
-        switch(command) {
-                /* NOTE COMMANDS: Pitch is calculated based on the octave and
-                the frequencies found in the BASE_HZ array.
-                Then, incomming_note is changed to 1,
-                causing the polyphony operator child
-                process to execute the note with
-                envelope.
-                */
-            case '`':
-                this->synths[0].trigger_note(this->calculate_note(11, octave - 1));
-                break;
-            case '1':
-                this->synths[0].trigger_note(this->calculate_note(0, octave));
-                break;
-            case 'q':
-                this->synths[0].trigger_note(this->calculate_note(1, octave));
-                break;
-            case '2':
-                this->synths[0].trigger_note(this->calculate_note(2, octave));
-                break;
-            case '3':
-                this->synths[0].trigger_note(this->calculate_note(3, octave));
-                break;
-            case 'e':
-                this->synths[0].trigger_note(this->calculate_note(4, octave));
-                break;
-            case '4':
-                this->synths[0].trigger_note(this->calculate_note(5, octave));
-                break;
-            case 'r':
-                this->synths[0].trigger_note(this->calculate_note(6, octave));
-                break;
-            case '5':
-                this->synths[0].trigger_note(this->calculate_note(7, octave));
-                break;
-            case '6':
-                this->synths[0].trigger_note(this->calculate_note(8, octave));
-                break;
-            case 'y':
-                this->synths[0].trigger_note(this->calculate_note(9, octave));
-                break;
-            case '7':
-                this->synths[0].trigger_note(this->calculate_note(10, octave));
-                break;
-            case 'u':
-                this->synths[0].trigger_note(this->calculate_note(11, octave));
-                break;
-            case '8':
-                this->synths[0].trigger_note(this->calculate_note(0, octave + 1));
-                break;
-            /* OCTAVE CHANGE COMMANDS: Octave is used to calculate the
-               pitch incrementer for a note in a
-               given octave (see above).  Octave
-               value ranges from 2 to 5. */
-            case '-':
-                if(octave == 2) {
-                    this->ui.info("Already at lowest octave");
-                } else {
-                    octave--;
-                    this->ui.info("Octave: %d",  octave);
-                }
-                break;
-            case '=':
-                if(octave == 5) {
-                    this->ui.info("Already at highest octave");
-                } else {
-                    octave++;
-                    this->ui.info("Octave: %d",  octave);
-                }
-                break;
-            // TIMBRE COMMANDS: Wavetable is rewritten to create a new timbre
-            case 'A': // SINE WAVE
-                this->mixer->fade_out();
-                this->synths[0].table.sine_wave();
-                this->mixer->fade_in();
-                break;
-            case 'S': // SQUARE WAVE
-                this->mixer->fade_out();
-                this->synths[0].table.square_wave();
-                this->mixer->fade_in();
-                break;
-            case 'C': // CREATE CUSTOM TIMBRE
-                this->mixer->fade_out();
-                this->ui.custom_wave(this->synths[0].table.harmonic_amplitudes);
-                this->synths[0].table.custom_wave();
-                this->mixer->fade_in();
-                break;
-            case 'z': // PRINT OPERATING INFO TO TERMINAL
-                this->ui.help();
-                break;
-            case 'x':
-                // stops the while loop
-                loop = false;
-                this->mixer->fade_out();
-                break;
-            default:
-                this->ui.info("NOT A NOTE!\n");
+        for(i = 0; i < this->mappings.size(); i++) {
+            // call controller callback
+            m = this->mappings[i];
+            m->controller->process(&loop, this, m->instrument);
         }
     }
+    this->mixer->fade_out();
     this->end();
     return;
 }
@@ -228,12 +160,12 @@ int Engine::callback(const void *inputBuffer, void *outputBuffer,
     {
         // add each channel
         for(x = 0; x < NUM_CHANNELS; x++) {
-            *out++ = e->mixer->mix(x, e->synths, e->num_synths);
+            *out++ = e->mixer->mix(x, e->instruments);
         }
         // Advance system
         e->mixer->advance();
-        for(x = 0; x < e->num_synths; x++) {
-            e->synths[x].advance();
+        for(x = 0; x < e->instruments.size(); x++) {
+            e->instruments[x]->advance();
         }
     }
     return paContinue;

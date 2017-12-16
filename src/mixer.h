@@ -10,7 +10,8 @@
 #define mixer_h
 
 #include "littledaw.h"
-#include "synth.h"
+#include "instrument.h"
+#include <vector>
 
 #define FADE_INCREMENT (0.00003)
 
@@ -24,7 +25,7 @@ public:
     void fade_in();
     void fade_out();
     void wait_for_fade();
-    float mix(int, Synth*, int);
+    float mix(int, std::vector<Instrument*>);
     void advance();
 };
 

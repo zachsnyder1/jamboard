@@ -9,30 +9,21 @@
 #include "engine.h"
 #include "envelope.h"
 
-/*
- Make an engine object, run it.
-*/
-int main(int argc, char *argv[]) {
-    Engine *engine;
-    int continuous = 0;
-    int option;
 
-    // parse command line args
-    while ((option = getopt(argc, argv, "c")) != -1) {
-        switch (option) {
-            case 'c':
-                continuous = 1;
-                break;
-        }
-    }
+int main(int argc, char *argv[]) {
+    Engine *engine = new Engine();
+    WaveTableSynth *synth = new WaveTableSynth();
+    ShellController *shell = new ShellController();
     
-    if(continuous) {
-        engine = new Engine(1);
-    } else {
-        engine = new Engine();
-    }
+    engine->add_instrument(synth);
+    engine->add_controller(shell);
+    engine->map_controller(shell, synth);
     engine->run(); // go
+
+
     delete engine;
+    delete synth;
+    delete shell;
     
     return 0;
 }

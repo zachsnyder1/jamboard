@@ -13,34 +13,33 @@
 #include "wavetable.h"
 #include "mixer.h"
 #include "envelope.h"
-#include "ui.h"
-#include "synth.h"
+#include "controller.h"
+#include "instrument.h"
+#include <vector>
 
-/* Define base pitches so that the pitch can be calculated for any note in any
- octave using the relatively simple switch board in each engine. */
-static float BASE_HZ[] = {27.5, 29.14, 30.87, 32.7, 34.65, 36.71, 38.89, 41.2,
-    43.65, 46.25, 49, 51.91};
+struct Mapping;
 
-// Engine class
 class Engine {
 protected:
-    // ----- ATTRIBUTES -----
-    int num_synths;
-    Synth *synths;
-    Mixer *mixer;
-    UserInterface ui;
     // portaudio objects
     PaStreamParameters *outputParameters; //struct for stream parameters
     PaStream *stream;
     PaError err;
     // housekeeping
-    float calculate_note(int, int);
     void error();
     void end();
 public:
+    // ----- ATTRIBUTES -----
+    std::vector<Mapping*> mappings;
+    std::vector<Controller*> controllers;
+    std::vector<Instrument*> instruments;
+    Mixer *mixer;
     // ----- USER METHODS -----
-    Engine(int num_v=DEFAULT_NUM_VOICES, float start_note=START_NOTE);
+    Engine();
     ~Engine();
+    void add_instrument(Instrument*);
+    void add_controller(Controller*);
+    void map_controller(Controller*, Instrument*);
     void run();
     // ----- PORTAUDIO CALLBACK METHODS -----
     static int callback(const void*,
