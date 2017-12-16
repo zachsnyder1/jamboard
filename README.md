@@ -8,10 +8,9 @@ and sampling utilities, small enough to run on Raspberry Pi.
 ## CURRENT STATUS
 
 So far little-daw is a minimal skeleton, with one wavetable synthesizer 
-that allows you to play a melody using the keys on your keyboard.  The 
-pitch ranges four octaves from A-100 to A-1760, and the timbre can be a 
-sine wave, square wave, or custom waveform built based on the amplitudes
-of the fundamental and the first X harmonics.
+that allows you to play a melody using the keys on your keyboard.  The timbre 
+can be a sine wave, square wave, or custom waveform built based on the 
+amplitudes of the fundamental and the first X harmonics.
 
 
 ## COMPILING
@@ -42,26 +41,20 @@ then hit RETURN.
 Here is a schematic showing spatial arrangement of keys
 and their associated note values:
 ```
-
----------------- KEYS: -----------------------|
-                                              |
-[`][1]   [2] [3]   [4]   [5] [6]   [7]   [8]  |
-      [q]       [e]   [r]       [y]   [u]     |
-                                              |
------------ CORRESPONDING NOTES: -------------|
-                                              |
-[g#][a]   [b] [c]   [d]   [e] [f]   [g]   [a] |
-       [a#]      [c#]  [d#]      [f#]  [g#]   |
-______________________________________________|
-
-   OTHER COMMANDS:
-   --------------
-     -   --->  Go down an octave
-     =   --->  Go up an octave (if it were '+' you would have to type shift...)
-     A   --->  Timbre = sine wave
-     S   --->  Timbre = square wave (default)
-     z   --->  Print help
-     x   --->  EXIT PROGRAM
+--------------------- KEYS: ----------------|
+                                            |
+     [`][1][2][3][4][5][6][7][8]            |
+          [q]   [e][r]   [y][u]             |
+            [a][s][d][f][g][h][j][k]        |
+              [z]   [c][v]   [n][m]         |
+                                            |
+------------ CORRESPONDING NOTES: ----------|
+                                            |
+     [g#][a][b][c][d][e][f][g][a]           |
+          [a#]  [c#][d#] [f#][g#]           |
+            [a][b][c][d][e][f][g][a]        |
+              a#]  [c#][d#] [f#][g#]        |
+____________________________________________|
 ```
 
 
