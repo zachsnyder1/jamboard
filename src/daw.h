@@ -1,13 +1,13 @@
 //
-//  engine.h
+//  daw.h
 //  little-daw
 //
 //  Created by Zach Snyder on 11/26/17.
 //  Copyright © 2017 Zach Snyder. All rights reserved.
 //
 
-#ifndef engine_h
-#define engine_h
+#ifndef daw_h
+#define daw_h
 
 #include "littledaw.h"
 #include "wavetable.h"
@@ -19,7 +19,7 @@
 
 struct Mapping;
 
-class Engine {
+class Daw {
 protected:
     // portaudio objects
     PaStreamParameters *outputParameters; //struct for stream parameters
@@ -35,8 +35,8 @@ public:
     std::vector<Instrument*> instruments;
     Mixer *mixer;
     // ----- USER METHODS -----
-    Engine();
-    ~Engine();
+    Daw();
+    ~Daw();
     void add_instrument(Instrument*);
     void add_controller(Controller*);
     void map_controller(Controller*, Instrument*);
@@ -50,4 +50,4 @@ public:
                         void *);
 };
 
-#endif /* engine_h */
+#endif /* daw_h */

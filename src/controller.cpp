@@ -7,7 +7,7 @@
 //
 
 #include "controller.h"
-#include "engine.h"
+#include "daw.h"
 #include "instrument.h"
 
 
@@ -135,10 +135,10 @@ void ShellController::custom_wave(int *harmonic_amplitudes) {
     return;
 }
 
-void ShellController::process(bool *loop, void *engine, void *instrument) {
+void ShellController::process(bool *loop, void *daw, void *instrument) {
     char command;
     int ha[HIGHEST_HARMONIC] = {0};
-    Engine *e = (Engine*)engine;
+    Daw *e = (Daw*)daw;
     Instrument *inst = (Instrument*)instrument;
     
     std::cout << ">> "; // print the prompt

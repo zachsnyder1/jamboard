@@ -1,12 +1,12 @@
 //
-//  engine.cpp
+//  daw.cpp
 //  little-daw
 //
 //  Created by Zach Snyder on 11/26/17.
 //  Copyright © 2017 Zach Snyder. All rights reserved.
 //
 
-#include "engine.h"
+#include "daw.h"
 
 /*
  Mapping struct for Instruments
@@ -17,9 +17,9 @@ struct Mapping {
 };
 
 /*
- Engine constructor
+ Daw constructor
 */
-Engine::Engine() {
+Daw::Daw() {
     // objects
     this->mixer = new Mixer;
     this->outputParameters = new PaStreamParameters;
@@ -49,9 +49,9 @@ Engine::Engine() {
 }
 
 /*
- Engine destructor
+ Daw destructor
 */
-Engine::~Engine() {
+Daw::~Daw() {
   delete this->mixer;
   delete this->outputParameters;
   for(int i = 0; i < this->mappings.size(); i++) {
@@ -60,23 +60,23 @@ Engine::~Engine() {
 }
 
 /*
- Register an instrument with the engine
+ Register an instrument with the daw
 */
-void Engine::add_instrument(Instrument *instrument) {
+void Daw::add_instrument(Instrument *instrument) {
     this->instruments.push_back(instrument);
 }
 
 /*
- Register a controller with the engine
+ Register a controller with the daw
 */
-void Engine::add_controller(Controller *controller) {
+void Daw::add_controller(Controller *controller) {
     this->controllers.push_back(controller);
 }
 
 /*
  Map a controller to an instrument
 */
-void Engine::map_controller(Controller *c, Instrument *i) {
+void Daw::map_controller(Controller *c, Instrument *i) {
     Mapping *m = new Mapping();
     m->controller = c;
     m->instrument = i;
@@ -86,7 +86,7 @@ void Engine::map_controller(Controller *c, Instrument *i) {
 /*
  Clean exit
 */
-void Engine::error() {
+void Daw::error() {
     Pa_Terminate();
     for(int i = 0; i < this->controllers.size(); i++) {
         this->controllers[i]->error(Pa_GetErrorText(this->err));
@@ -97,7 +97,7 @@ void Engine::error() {
 /*
  Clean your room
 */
-void Engine::end() {
+void Daw::end() {
     // stream is stopped
     this->err = Pa_StopStream(this->stream);
     if(this->err != paNoError) this->error();
@@ -114,9 +114,9 @@ void Engine::end() {
 }
 
 /*
- Run engine loop: get user commands, execute commands.
+ Run daw loop: get user commands, execute commands.
 */
-void Engine::run() {
+void Daw::run() {
     int i;
     Mapping *m;
     bool loop = true;
@@ -141,13 +141,13 @@ void Engine::run() {
 /*
  Callback used by PortAudio
  */
-int Engine::callback(const void *inputBuffer, void *outputBuffer,
+int Daw::callback(const void *inputBuffer, void *outputBuffer,
                                unsigned long framesPerBuffer,
                                const PaStreamCallbackTimeInfo *timeInfo,
                                PaStreamCallbackFlags statusFlags,
                                void *userData)
 {
-    Engine *e = (Engine*)userData;
+    Daw *e = (Daw*)userData;
     float *out = (float*)outputBuffer;
     int i, x; //for looping use...
     // casting the unused arguments as void to avoid 'unused' errors

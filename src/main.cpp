@@ -6,12 +6,12 @@
 //  Copyright © 2017 Zach Snyder. All rights reserved.
 //
 #include "littledaw.h"
-#include "engine.h"
+#include "daw.h"
 #include "envelope.h"
 
 
 int main(int argc, char *argv[]) {
-    Engine *engine = new Engine();
+    Daw *daw = new Daw();
     WaveTableSynth *synth;
     ShellController *shell = new ShellController();
     int continuous = 0;
@@ -33,13 +33,13 @@ int main(int argc, char *argv[]) {
     }
 
     
-    engine->add_instrument(synth);
-    engine->add_controller(shell);
-    engine->map_controller(shell, synth);
-    engine->run(); // go
+    daw->add_instrument(synth);
+    daw->add_controller(shell);
+    daw->map_controller(shell, synth);
+    daw->run(); // go
 
 
-    delete engine;
+    delete daw;
     delete synth;
     delete shell;
     
