@@ -9,6 +9,7 @@
 #include "controller.h"
 #include "daw.h"
 #include "instrument.h"
+#include "wavetable.h"
 
 void ShellController::salutation() {
     std::cout << "\n---------------------------------------------------------------";
@@ -116,7 +117,7 @@ void ShellController::custom_wave(int *harmonic_amplitudes) {
         } else if(command_str[0] == 's' && x == 0) {
             std::cout << "\n\n\tERROR: Enter amplitude for one or more frequency\n\n";
         // COMMAND 's': synthesize
-        } else if(command_str[0] == 's' || (x >= (HIGHEST_HARMONIC-1))) {
+        } else if(command_str[0] == 's' || (x >= (WaveTable::HIGHEST_HARMONIC-1))) {
             std::cout << "\n";
             loop = 0;
         // STORE USER INPUT, PROMPT FOR NEXT HARMONIC
@@ -134,7 +135,7 @@ void ShellController::custom_wave(int *harmonic_amplitudes) {
 
 void ShellController::input_loop(bool *loop, void *daw, void *instrument) {
     char command;
-    int ha[HIGHEST_HARMONIC] = {0};
+    int ha[WaveTable::HIGHEST_HARMONIC] = {0};
     Daw *e = (Daw*)daw;
     Instrument *inst = (Instrument*)instrument;
     

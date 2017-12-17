@@ -19,7 +19,14 @@
 
 struct Mapping;
 
-class Daw {
+class DawConstants {
+public:
+    static const int DEFAULT_SAMPLE_RATE = 44100;
+    static const int DEFAULT_NUM_CHANNELS = 2;
+    static const int DEFAULT_FRAMES_PER_BUFFER = 192;
+};
+
+class Daw : public DawConstants {
 protected:
     // portaudio objects
     PaStreamParameters *outputParameters; //struct for stream parameters

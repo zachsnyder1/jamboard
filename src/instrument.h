@@ -18,6 +18,8 @@
 
 class InstrumentConstants {
 public:
+    static const int DEFAULT_NUM_VOICES = 6;
+    constexpr static const float START_NOTE = 2.0275;
     // NOTE CONSTANTS:
     static const int A1 = 12;
     static const int AS1 = 13;
@@ -98,8 +100,9 @@ protected:
     std::vector<Voice*> voices;
     Envelope *envelope;
     int curr_voice;
+    int num_channels;
 public:
-    Instrument(int num_v=DEFAULT_NUM_VOICES);
+    Instrument(int num_channels=2, int num_v=Instrument::DEFAULT_NUM_VOICES);
     ~Instrument();
     int trigger(const int);
     void advance();
@@ -119,7 +122,7 @@ class WaveTableSynth : public Instrument, public WaveTableSynthConstants {
     float calculate_note(const int);
 public:
     // PUBLIC METHODS
-    WaveTableSynth(int num_v=DEFAULT_NUM_VOICES);
+    WaveTableSynth(int num_channels=2, int num_v=Instrument::DEFAULT_NUM_VOICES);
     ~WaveTableSynth();
     // Instrument abstract interface overrides
     void trigger_template(const int);

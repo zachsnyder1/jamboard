@@ -11,6 +11,15 @@
 
 #include "littledaw.h"
 
+class WaveTableConstants {
+public:
+    static const int TABLE_SIZE = 400;
+    static const int HIGHEST_HARMONIC = 10;
+    constexpr static const float SINE_MAX_AMP = 0.5;
+    constexpr static const float CUSTOM_MAX_AMP = 0.01;
+    constexpr static const float SQUARE_MAX_AMP = 0.05;
+};
+
 /*
  Class WaveTable:
    Holds a wave table for audio synthesis, and can populate
@@ -19,7 +28,7 @@
      * pseudo square wave
      * custom wave (user defined)
 */
-class WaveTable {
+class WaveTable : public WaveTableConstants {
 public:
     float *table; // table for wavetable synthesis
     int *harmonic_amplitudes; // for custom synth

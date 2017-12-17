@@ -12,9 +12,9 @@
  WaveTable constructor: make table, populate with pseudo square wave
 */
 WaveTable::WaveTable() {
-    this->table = new float[TABLE_SIZE];
-    this->harmonic_amplitudes = new int[HIGHEST_HARMONIC]; // for custom synth
-    for(int i = 0; i < HIGHEST_HARMONIC; i++) {
+    this->table = new float[WaveTable::TABLE_SIZE];
+    this->harmonic_amplitudes = new int[WaveTable::HIGHEST_HARMONIC]; // for custom synth
+    for(int i = 0; i < WaveTable::HIGHEST_HARMONIC; i++) {
         this->harmonic_amplitudes[i] = 0;
     }
     square_wave();
@@ -36,10 +36,10 @@ void WaveTable::sine_wave() {
     float calculated_sample;
     double sin_input;
     
-    for(x = 0; x < TABLE_SIZE; x++) {
-        sin_input = ((double)x/(double)TABLE_SIZE) * M_PI * 2.0;
+    for(x = 0; x < WaveTable::TABLE_SIZE; x++) {
+        sin_input = ((double)x/(double)WaveTable::TABLE_SIZE) * M_PI * 2.0;
         calculated_sample = (float) sin(sin_input);
-        this->table[x] = SINE_MAX_AMP * calculated_sample;
+        this->table[x] = WaveTable::SINE_MAX_AMP * calculated_sample;
     }
 }
 
@@ -48,24 +48,24 @@ void WaveTable::sine_wave() {
  */
 void WaveTable::square_wave() {
     int x;
-    for(x = 0; x < TABLE_SIZE; x++) {
+    for(x = 0; x < WaveTable::TABLE_SIZE; x++) {
         if(x < 10) {
-            this->table[x] = (SQUARE_MAX_AMP * (0 + (x * 0.1)));
+            this->table[x] = (WaveTable::SQUARE_MAX_AMP * (0 + (x * 0.1)));
         }
         if(9 < x && x < 190) {
-            this->table[x] = SQUARE_MAX_AMP;
+            this->table[x] = WaveTable::SQUARE_MAX_AMP;
         }
         if(189 < x && x < 200) {
-            this->table[x] = (SQUARE_MAX_AMP * (1 - ((x-190) * 0.1)));
+            this->table[x] = (WaveTable::SQUARE_MAX_AMP * (1 - ((x-190) * 0.1)));
         }
         if(199 < x && x < 210) {
-            this->table[x] = (SQUARE_MAX_AMP * (0 - ((x-200) * 0.1)));
+            this->table[x] = (WaveTable::SQUARE_MAX_AMP * (0 - ((x-200) * 0.1)));
         }
         if(209 < x && x < 390) {
-            this->table[x] = -SQUARE_MAX_AMP;
+            this->table[x] = -WaveTable::SQUARE_MAX_AMP;
         }
-        if(389 < x && x < TABLE_SIZE) {
-            this->table[x] = (SQUARE_MAX_AMP * (-1 + ((x-390) * 0.1)));
+        if(389 < x && x < WaveTable::TABLE_SIZE) {
+            this->table[x] = (WaveTable::SQUARE_MAX_AMP * (-1 + ((x-390) * 0.1)));
         }
     }
 }
@@ -76,29 +76,29 @@ void WaveTable::square_wave() {
 void WaveTable::custom_wave() {
     float amplitude_scale = 0.0;
     float amplitude_total = 0.0;
-    float temp_table[TABLE_SIZE];
+    float temp_table[WaveTable::TABLE_SIZE];
     int target_index;
     int i, x;
     
     // set table to reference sine wave
     this->sine_wave();
     // add harmonic amplitudes
-    for(i = 0; i < HIGHEST_HARMONIC; i++) {
+    for(i = 0; i < WaveTable::HIGHEST_HARMONIC; i++) {
         amplitude_scale += this->harmonic_amplitudes[i];
     }
     // harmonics waveforms are added together, one wavetable index at a time
-    for(i = 0; i < TABLE_SIZE; i++) {
-        for(x = 0; x < (HIGHEST_HARMONIC); x++) {
+    for(i = 0; i < WaveTable::TABLE_SIZE; i++) {
+        for(x = 0; x < (WaveTable::HIGHEST_HARMONIC); x++) {
             target_index = (int)(i * pow((double)2, x));
-            target_index = target_index % TABLE_SIZE;
+            target_index = target_index % WaveTable::TABLE_SIZE;
             amplitude_total += this->table[target_index] *
               (this->harmonic_amplitudes[x] / amplitude_scale) *
-              CUSTOM_MAX_AMP;
+              WaveTable::CUSTOM_MAX_AMP;
         }
         temp_table[i] = amplitude_total;
     }
     // main wavetable is replaced with data stored in the temporary table
-    for(i = 0; i < TABLE_SIZE; i++) {
+    for(i = 0; i < WaveTable::TABLE_SIZE; i++) {
         this->table[i] = temp_table[i];
     }
 }

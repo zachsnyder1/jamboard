@@ -11,8 +11,9 @@
 /*
  Instrument constructor
 */
-Instrument::Instrument(int num_v) {
+Instrument::Instrument(int num_c, int num_v) {
     this->curr_voice = 0;
+    this->num_channels = num_c;
     this->envelope = new Envelope();
     for(int i = 0; i < num_v; i++) {
         Voice *v = new Voice();
@@ -73,14 +74,15 @@ float WaveTableSynth::calculate_note(const int note_const) {
 /*
  WaveTableSynth default constructor
 */
-WaveTableSynth::WaveTableSynth(int num_v) : Instrument::Instrument(num_v) {
+WaveTableSynth::WaveTableSynth(int num_c, int num_v) : 
+Instrument::Instrument(num_c, num_v) {
     int i;
     this->pitch_incrementers = new float[this->voices.size()];
-    this->wavetable_positions = new float[(this->voices.size()*NUM_CHANNELS)];
+    this->wavetable_positions = new float[(this->voices.size()*this->num_channels)];
     for(i = 0; i < this->voices.size(); i++) {
         this->pitch_incrementers[i] = START_NOTE;
     }
-    for(int i = 0; i < (this->voices.size()*NUM_CHANNELS); i++){
+    for(int i = 0; i < (this->voices.size()*this->num_channels); i++){
         this->wavetable_positions[i] = 0.0;
     }
 }
@@ -107,11 +109,11 @@ void WaveTableSynth::advance_template() {
     int v, c, x;
     // advance channel positions
     for(v = 0; v < this->voices.size(); v++) {
-        for(c = 0; c < NUM_CHANNELS; c++) {
-            x = (v*NUM_CHANNELS) + c;
+        for(c = 0; c < this->num_channels; c++) {
+            x = (v*this->num_channels) + c;
             this->wavetable_positions[x] += this->pitch_incrementers[v];
-            if(this->wavetable_positions[x] > TABLE_SIZE) {
-                this->wavetable_positions[x] -=  TABLE_SIZE;
+            if(this->wavetable_positions[x] > WaveTable::TABLE_SIZE) {
+                this->wavetable_positions[x] -=  WaveTable::TABLE_SIZE;
             }
         }
     }
@@ -131,7 +133,7 @@ float WaveTableSynth::output(int chann) {
     float envelope_signal;
     
     for(i = 0; i < this->voices.size(); i++) {
-        wt_index = (int)(this->wavetable_positions[(i*NUM_CHANNELS)+chann]);
+        wt_index = (int)(this->wavetable_positions[(i*this->num_channels)+chann]);
         voice_signal = this->table.table[wt_index];
         envelope_signal = this->envelope->calculate(this->voices[i]->envelope_pos, 
                                                     this->voices[i]->is_triggered());
@@ -156,7 +158,7 @@ void WaveTableSynth::command(const int command, void *data) {
             break;
         case COMMAND_CUSTOM_WAVE:
             int *d = (int*)data;
-            for(int i=0; i < HIGHEST_HARMONIC; i++) {
+            for(int i=0; i < WaveTable::HIGHEST_HARMONIC; i++) {
                 this->table.harmonic_amplitudes[i] = d[i];
             }
             this->table.custom_wave();

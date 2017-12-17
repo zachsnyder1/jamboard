@@ -27,7 +27,7 @@ Daw::Daw() {
     if(this->err != paNoError) this->error();
     // setup output parameters for Pa_OpenStream()
     this->outputParameters->device = Pa_GetDefaultOutputDevice();
-    this->outputParameters->channelCount = 2; // stereo
+    this->outputParameters->channelCount = Daw::DEFAULT_NUM_CHANNELS; // stereo
     this->outputParameters->sampleFormat = paFloat32; // 32 bit floating point samples
     this->outputParameters->suggestedLatency = Pa_GetDeviceInfo(
                                                this->outputParameters->device)->
@@ -37,8 +37,8 @@ Daw::Daw() {
     this->err = Pa_OpenStream(&(this->stream),
                               NULL,
                               this->outputParameters,
-                              SAMPLE_RATE,
-                              FRAMES_PER_BUFFER,
+                              Daw::DEFAULT_SAMPLE_RATE,
+                              Daw::DEFAULT_FRAMES_PER_BUFFER,
                               paClipOff,
                               this->callback,
                               this);
@@ -159,7 +159,7 @@ int Daw::callback(const void *inputBuffer, void *outputBuffer,
     for(i = 0; i<framesPerBuffer; i++)
     {
         // add each channel
-        for(x = 0; x < NUM_CHANNELS; x++) {
+        for(x = 0; x < Daw::DEFAULT_NUM_CHANNELS; x++) {
             *out++ = e->mixer->mix(x, e->instruments);
         }
         // Advance system
