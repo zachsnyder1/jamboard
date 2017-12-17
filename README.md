@@ -18,7 +18,7 @@ amplitudes of the fundamental and the first X harmonics.
 Compile from the /src directory.  You may need to explicitly link to the
 'portaudio' library. If you use g++, compilation may look like this:
 
-	      g++ *.cpp -lportaudio -o littledaw
+	      g++ *.cpp -lportaudio -o littledaw -std=c++11
 
 
 ## INVOKING
