@@ -9,8 +9,6 @@
 #ifndef envelope_h
 #define envelope_h
 
-#include "littledaw.h"
-
 class EnvelopeConstants {
 public:
     static const int DEFAULT_ATTACK = 1000;

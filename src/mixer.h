@@ -9,7 +9,6 @@
 #ifndef mixer_h
 #define mixer_h
 
-#include "littledaw.h"
 #include "instrument.h"
 #include <vector>
 

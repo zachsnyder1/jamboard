@@ -9,8 +9,6 @@
 #ifndef voice_h
 #define voice_h
 
-#include "littledaw.h"
-
 // Voice base class
 class Voice {
     bool triggered;

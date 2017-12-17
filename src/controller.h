@@ -9,7 +9,7 @@
 #ifndef controller_h
 #define controller_h
 
-#include "littledaw.h"
+#include <iostream>
 
 // Controller abstract base class
 class Controller {

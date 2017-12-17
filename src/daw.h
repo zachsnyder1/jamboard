@@ -9,12 +9,12 @@
 #ifndef daw_h
 #define daw_h
 
-#include "littledaw.h"
 #include "wavetable.h"
 #include "mixer.h"
 #include "envelope.h"
 #include "controller.h"
 #include "instrument.h"
+#include "portaudio.h"
 #include <vector>
 
 struct Mapping;

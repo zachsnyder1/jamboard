@@ -9,7 +9,6 @@
 #ifndef instrument_h
 #define instrument_h
 
-#include "littledaw.h"
 #include "voice.h"
 #include "envelope.h"
 #include "wavetable.h"
