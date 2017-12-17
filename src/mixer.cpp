@@ -68,13 +68,13 @@ float Mixer::mix(int chann, std::vector<Instrument*> instruments) {
 void Mixer::advance() {
     int i;
 
-    if(this->fadein && (this->master < 1.0)) {
-        this->master += FADE_INCREMENT;
+    if(this->fadein && (this->master < this->MIXER_MAX)) {
+        this->master += this->FADE_INCREMENT;
     } else {
         this->fadein = false;
     }
-    if(this->fadeout && (this->master > 0.0)) {
-        this->master -= FADE_INCREMENT;
+    if(this->fadeout && (this->master > this->MIXER_MIN)) {
+        this->master -= this->FADE_INCREMENT;
     } else {
         this->fadeout = false;
     }

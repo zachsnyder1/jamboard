@@ -13,10 +13,15 @@
 #include "instrument.h"
 #include <vector>
 
-#define FADE_INCREMENT (0.00003)
+class MixerConstants {
+public:
+    const float FADE_INCREMENT = 0.00003;
+    const float MIXER_MAX = 1.0;
+    const float MIXER_MIN = 0.0;
+};
 
 // Mixer base class
-class Mixer {
+class Mixer : public MixerConstants {
     float master;
     bool fadein;
     bool fadeout;
