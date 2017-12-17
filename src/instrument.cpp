@@ -20,9 +20,9 @@ float WaveTableSynth::calculate_note(const int note_const) {
 }
 
 /*
- WaveTableSynth default constructor
+ Instrument constructor
 */
-WaveTableSynth::WaveTableSynth(int num_v) {
+Instrument::Instrument(int num_v) {
     this->curr_voice = 0;
     this->envelope = new Envelope((num_v == 1));
     for(int i = 0; i < num_v; i++) {
@@ -34,11 +34,25 @@ WaveTableSynth::WaveTableSynth(int num_v) {
 /*
  WaveTableSynth destructor
 */
-WaveTableSynth::~WaveTableSynth() {
+Instrument::~Instrument() {
     delete this->envelope;
     for(int i = 0; i < this->voices.size(); i++) {
         delete this->voices[i];
     }
+}
+
+/*
+ WaveTableSynth default constructor
+*/
+WaveTableSynth::WaveTableSynth(int num_v) : Instrument::Instrument(num_v) {
+    
+}
+
+/*
+ WaveTableSynth destructor
+*/
+WaveTableSynth::~WaveTableSynth() {
+    
 }
 
 /*

@@ -83,7 +83,14 @@ public:
 
 // Instrument abstract base class
 class Instrument : public InstrumentConstants {
+protected:
+    std::vector<Voice*> voices;
+    Envelope *envelope;
+    int curr_voice;
 public:
+    // CONSTR. DESTR.
+    Instrument(int num_v=DEFAULT_NUM_VOICES);
+    ~Instrument();
     // abstract interface
     virtual int trigger_note(const int) { return 1; };
     virtual void advance() {};
@@ -104,10 +111,7 @@ public:
 
 // Synth instrument class
 class WaveTableSynth : public Instrument, public WaveTableSynthConstants {
-    std::vector<Voice*> voices;
-    Envelope *envelope;
     WaveTable table;
-    int curr_voice;
     // helper method(s)
     float calculate_note(const int);
 public:
