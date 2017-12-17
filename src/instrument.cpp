@@ -24,7 +24,7 @@ float WaveTableSynth::calculate_note(const int note_const) {
 */
 Instrument::Instrument(int num_v) {
     this->curr_voice = 0;
-    this->envelope = new Envelope((num_v == 1));
+    this->envelope = new Envelope();
     for(int i = 0; i < num_v; i++) {
         Voice *v = new Voice();
         this->voices.push_back(v);

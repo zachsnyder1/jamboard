@@ -23,13 +23,7 @@ Compile from the /src directory.  You may need to explicitly link to the
 
 ## INVOKING
 
-In (default) polyphonic mode:
-
         ./littledaw
-
-In continuous signal mode:
-
-        ./littledaw -c
 
 
 ## COMMANDS

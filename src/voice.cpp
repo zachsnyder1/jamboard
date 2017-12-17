@@ -40,7 +40,7 @@ void Voice::advance(int envelope_len) {
 
 void Voice::trigger(float note, int num_v) {
     this->pitch_incrementer = note;
-    if(num_v > 1) this->triggered = true;
+    this->triggered = true;
 }
 
 bool Voice::is_triggered() {

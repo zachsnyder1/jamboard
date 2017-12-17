@@ -22,11 +22,9 @@ class Envelope {
     // envelope parameters
     int node1, node2, node3;
     float sustain_level;
-    bool continuous;
 public:
     int length; // in samples
-    Envelope(bool continuous=false,
-             int a=DEFAULT_ATTACK, 
+    Envelope(int a=DEFAULT_ATTACK, 
              int d=DEFAULT_DECAY, 
              int s=DEFAULT_SUSTAIN, 
              int r=DEFAULT_RELEASE, 
