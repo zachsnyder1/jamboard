@@ -13,8 +13,8 @@
    TAKES:
      
 */
-float Instrument::calculate_note(const int note_const) {
-    double base_hz = BASE_HZ[note_const % 12];
+float WaveTableSynth::calculate_note(const int note_const) {
+    double base_hz = this->BASE_HZ[note_const % 12];
     double octave = (double)(note_const / (int)12);
     return (float)((base_hz * pow((double)2, octave)) / 110);
 }

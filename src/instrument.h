@@ -15,13 +15,8 @@
 #include "wavetable.h"
 #include <vector>
 
-/* Define base pitches so that the pitch can be calculated for any note in any
- octave using the relatively simple switch board in each engine. */
-static float BASE_HZ[] = {27.5, 29.14, 30.87, 32.7, 34.65, 36.71, 38.89, 41.2,
-    43.65, 46.25, 49, 51.91};
 
-// Instrument abstract base class
-class Instrument {
+class InstrumentConstants {
 public:
     // NOTE CONSTANTS:
     static const int A1 = 12;
@@ -84,8 +79,11 @@ public:
     static const int FS5 = 69;
     static const int G5 = 70;
     static const int GS5 = 71;
-    // helper method(s)
-    float calculate_note(const int);
+};
+
+// Instrument abstract base class
+class Instrument : public InstrumentConstants {
+public:
     // abstract interface
     virtual int trigger_note(const int) { return 1; };
     virtual void advance() {};
@@ -93,18 +91,26 @@ public:
     virtual void command(const int, void*) {};
 };
 
-
-// Synth instrument class
-class WaveTableSynth : public Instrument {
-    std::vector<Voice*> voices;
-    Envelope *envelope;
-    WaveTable table;
-    int curr_voice;
+class WaveTableSynthConstants {
+protected:
+    float BASE_HZ[12] = {27.5, 29.14, 30.87, 32.7, 34.65, 36.71, 38.89, 
+                       41.2, 43.65, 46.25, 49, 51.91};
 public:
     // COMMAND CONSTANTS
     static const int COMMAND_SINE_WAVE = 100;
     static const int COMMAND_SQUARE_WAVE = 101;
     static const int COMMAND_CUSTOM_WAVE = 102;
+};
+
+// Synth instrument class
+class WaveTableSynth : public Instrument, public WaveTableSynthConstants {
+    std::vector<Voice*> voices;
+    Envelope *envelope;
+    WaveTable table;
+    int curr_voice;
+    // helper method(s)
+    float calculate_note(const int);
+public:
     // PUBLIC METHODS
     WaveTableSynth(int num_v=DEFAULT_NUM_VOICES);
     ~WaveTableSynth();
