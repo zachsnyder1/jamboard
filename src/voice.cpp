@@ -8,25 +8,12 @@
 
 #include "voice.h"
 
-Voice::Voice(float start_note) {
-    this->pitch_incrementer = start_note;
+Voice::Voice() {
     this->triggered = false;
     this->envelope_pos = 0;
-    for(int i = 0; i < NUM_CHANNELS; i++){
-        this->wavetable_pos[i] = 0.0;
-    }
 }
 
 void Voice::advance(int envelope_len) {
-    int i;
-
-    // advance channel positions
-    for(i = 0; i < NUM_CHANNELS; i++) {
-        this->wavetable_pos[i] += this->pitch_incrementer;
-        if(this->wavetable_pos[i] > TABLE_SIZE) {
-            this->wavetable_pos[i] -=  TABLE_SIZE;
-        }
-    }
     // advance envelope position
     if(this->triggered) {
         if(this->envelope_pos >= envelope_len) {
@@ -38,8 +25,7 @@ void Voice::advance(int envelope_len) {
     }
 }
 
-void Voice::trigger(float note, int num_v) {
-    this->pitch_incrementer = note;
+void Voice::trigger() {
     this->triggered = true;
 }
 

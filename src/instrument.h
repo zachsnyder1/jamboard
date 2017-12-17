@@ -112,6 +112,8 @@ public:
 // Synth instrument class
 class WaveTableSynth : public Instrument, public WaveTableSynthConstants {
     WaveTable table;
+    float *wavetable_positions;
+    float *pitch_incrementers;
     // helper method(s)
     float calculate_note(const int);
 public:

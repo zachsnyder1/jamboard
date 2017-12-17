@@ -45,14 +45,23 @@ Instrument::~Instrument() {
  WaveTableSynth default constructor
 */
 WaveTableSynth::WaveTableSynth(int num_v) : Instrument::Instrument(num_v) {
-    
+    int i;
+    this->pitch_incrementers = new float[this->voices.size()];
+    this->wavetable_positions = new float[(this->voices.size()*NUM_CHANNELS)];
+    for(i = 0; i < this->voices.size(); i++) {
+        this->pitch_incrementers[i] = START_NOTE;
+    }
+    for(int i = 0; i < (this->voices.size()*NUM_CHANNELS); i++){
+        this->wavetable_positions[i] = 0.0;
+    }
 }
 
 /*
  WaveTableSynth destructor
 */
 WaveTableSynth::~WaveTableSynth() {
-    
+    delete [] this->pitch_incrementers;
+    delete [] this->wavetable_positions;
 }
 
 /*
@@ -61,12 +70,11 @@ WaveTableSynth::~WaveTableSynth() {
      note --> the note to trigger
 */
 int WaveTableSynth::trigger_note(const int note_const) {
-    float note;
     if(this->voices[this->curr_voice]->is_triggered()) {
         return 1; // No free voices
     } else {
-        note = this->calculate_note(note_const);
-        this->voices[this->curr_voice]->trigger(note, this->voices.size());
+        this->pitch_incrementers[this->curr_voice] = this->calculate_note(note_const);
+        this->voices[this->curr_voice]->trigger();
         this->curr_voice++;
         this->curr_voice %= this->voices.size();
         return 0;
@@ -77,8 +85,17 @@ int WaveTableSynth::trigger_note(const int note_const) {
  Advance all voices.
 */
 void WaveTableSynth::advance() {
-    int i;
-    
+    int i, v, c, x;
+    // advance channel positions
+    for(v = 0; v < this->voices.size(); v++) {
+        for(c = 0; c < NUM_CHANNELS; c++) {
+            x = (v*NUM_CHANNELS) + c;
+            this->wavetable_positions[x] += this->pitch_incrementers[v];
+            if(this->wavetable_positions[x] > TABLE_SIZE) {
+                this->wavetable_positions[x] -=  TABLE_SIZE;
+            }
+        }
+    }
     // advance voices
     for(i = 0; i < this->voices.size(); i++) {
         this->voices[i]->advance(this->envelope->length);
@@ -94,12 +111,13 @@ void WaveTableSynth::advance() {
 */
 float WaveTableSynth::output(int chann) {
     float out = 0.0;
-    int i;
+    int i, wt_index;
     float voice_signal;
     float envelope_signal;
     
     for(i = 0; i < this->voices.size(); i++) {
-        voice_signal = this->table.table[(int)(this->voices[i]->wavetable_pos[chann])];
+        wt_index = (int)(this->wavetable_positions[(i*NUM_CHANNELS)+chann]);
+        voice_signal = this->table.table[wt_index];
         envelope_signal = this->envelope->calculate(this->voices[i]->envelope_pos, 
                                                     this->voices[i]->is_triggered());
         out += (voice_signal * envelope_signal);
