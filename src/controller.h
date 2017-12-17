@@ -15,7 +15,7 @@
 class Controller {
 public:
     // abstract interface
-    virtual void process(bool*, void*, void*) {}; // Engine*, Instrument*
+    virtual void input_loop(bool*, void*, void*) {}; // Engine*, Instrument*
     virtual void salutation() {};
     virtual void farewell() {};
     virtual void help() {};
@@ -27,10 +27,8 @@ public:
 
 class ShellController : public Controller {
 public:
-    // constructor
-    ShellController();
     // Controller interface overrides
-    void process(bool*, void*, void*); // Engine*, Instrument*
+    void input_loop(bool*, void*, void*); // Engine*, Instrument*
     void salutation();
     void farewell();
     void help();

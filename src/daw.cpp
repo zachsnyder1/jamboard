@@ -130,7 +130,7 @@ void Daw::run() {
         for(i = 0; i < this->mappings.size(); i++) {
             // call controller callback
             m = this->mappings[i];
-            m->controller->process(&loop, this, m->instrument);
+            m->controller->input_loop(&loop, this, m->instrument);
         }
     }
     this->mixer->fade_out();

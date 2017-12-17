@@ -10,9 +10,6 @@
 #include "daw.h"
 #include "instrument.h"
 
-
-ShellController::ShellController() {}
-
 void ShellController::salutation() {
     std::cout << "\n---------------------------------------------------------------";
     std::cout << "\n\t\tLITTLE-DAW WAVETABLE SYNTHESIS";
@@ -135,7 +132,7 @@ void ShellController::custom_wave(int *harmonic_amplitudes) {
     return;
 }
 
-void ShellController::process(bool *loop, void *daw, void *instrument) {
+void ShellController::input_loop(bool *loop, void *daw, void *instrument) {
     char command;
     int ha[HIGHEST_HARMONIC] = {0};
     Daw *e = (Daw*)daw;
