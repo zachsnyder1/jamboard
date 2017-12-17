@@ -7,7 +7,7 @@
 //
 
 #include "controller.h"
-#include "daw.h"
+#include "littledaw.h"
 #include "instrument.h"
 #include "wavetable.h"
 

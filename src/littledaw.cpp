@@ -6,7 +6,7 @@
 //  Copyright © 2017 Zach Snyder. All rights reserved.
 //
 
-#include "daw.h"
+#include "littledaw.h"
 
 /*
  Mapping struct for Instruments

@@ -10,7 +10,6 @@
 #define wavetable_h
 
 #include <math.h>
-//#include "littledaw.h"
 
 class WaveTableConstants {
 public:
