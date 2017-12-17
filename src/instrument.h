@@ -81,6 +81,17 @@ public:
     static const int GS5 = 71;
 };
 
+class WaveTableSynthConstants {
+protected:
+    float BASE_HZ[12] = {27.5, 29.14, 30.87, 32.7, 34.65, 36.71, 38.89, 
+                       41.2, 43.65, 46.25, 49, 51.91};
+public:
+    // COMMAND CONSTANTS
+    static const int COMMAND_SINE_WAVE = 100;
+    static const int COMMAND_SQUARE_WAVE = 101;
+    static const int COMMAND_CUSTOM_WAVE = 102;
+};
+
 // Instrument abstract base class
 class Instrument : public InstrumentConstants {
 protected:
@@ -97,17 +108,6 @@ public:
     virtual void advance_template() {};
     virtual float output(int) { return 0.0; };
     virtual void command(const int, void*) {};
-};
-
-class WaveTableSynthConstants {
-protected:
-    float BASE_HZ[12] = {27.5, 29.14, 30.87, 32.7, 34.65, 36.71, 38.89, 
-                       41.2, 43.65, 46.25, 49, 51.91};
-public:
-    // COMMAND CONSTANTS
-    static const int COMMAND_SINE_WAVE = 100;
-    static const int COMMAND_SQUARE_WAVE = 101;
-    static const int COMMAND_CUSTOM_WAVE = 102;
 };
 
 // Synth instrument class
