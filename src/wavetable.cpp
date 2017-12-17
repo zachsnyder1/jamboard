@@ -21,6 +21,14 @@ WaveTable::WaveTable() {
 }
 
 /*
+ WaveTable destructor
+*/
+WaveTable::~WaveTable() {
+    delete [] this->table;
+    delete [] this->harmonic_amplitudes;
+}
+
+/*
  Populate wave table with a sine waveform
 */
 void WaveTable::sine_wave() {

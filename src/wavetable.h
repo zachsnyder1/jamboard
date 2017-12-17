@@ -23,7 +23,8 @@ class WaveTable {
 public:
     float *table; // table for wavetable synthesis
     int *harmonic_amplitudes; // for custom synth
-    WaveTable(); // constructor
+    WaveTable();
+    ~WaveTable();
     // wave table methods
     void sine_wave();
     void square_wave();
