@@ -155,7 +155,10 @@ void WaveTableSynth::command(const int command, void *data) {
             this->table.square_wave();
             break;
         case COMMAND_CUSTOM_WAVE:
-            this->table.harmonic_amplitudes = (int*)data;
+            int *d = (int*)data;
+            for(int i=0; i < HIGHEST_HARMONIC; i++) {
+                this->table.harmonic_amplitudes[i] = d[i];
+            }
             this->table.custom_wave();
             break;
     }
