@@ -88,12 +88,13 @@ protected:
     Envelope *envelope;
     int curr_voice;
 public:
-    // CONSTR. DESTR.
     Instrument(int num_v=DEFAULT_NUM_VOICES);
     ~Instrument();
+    int trigger(const int);
+    void advance();
     // abstract interface
-    virtual int trigger_note(const int) { return 1; };
-    virtual void advance() {};
+    virtual void trigger_template(const int) {};
+    virtual void advance_template() {};
     virtual float output(int) { return 0.0; };
     virtual void command(const int, void*) {};
 };
@@ -120,9 +121,9 @@ public:
     // PUBLIC METHODS
     WaveTableSynth(int num_v=DEFAULT_NUM_VOICES);
     ~WaveTableSynth();
-    // Instrument interface overrides
-    int trigger_note(const int);
-    void advance();
+    // Instrument abstract interface overrides
+    void trigger_template(const int);
+    void advance_template();
     float output(int);
     void command(const int, void*);
 };

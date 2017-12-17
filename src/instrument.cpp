@@ -9,17 +9,6 @@
 #include "instrument.h"
 
 /*
- Calculates a note frequency
-   TAKES:
-     
-*/
-float WaveTableSynth::calculate_note(const int note_const) {
-    double base_hz = this->BASE_HZ[note_const % 12];
-    double octave = (double)(note_const / (int)12);
-    return (float)((base_hz * pow((double)2, octave)) / 110);
-}
-
-/*
  Instrument constructor
 */
 Instrument::Instrument(int num_v) {
@@ -39,6 +28,46 @@ Instrument::~Instrument() {
     for(int i = 0; i < this->voices.size(); i++) {
         delete this->voices[i];
     }
+}
+
+/*
+ Trigger a note
+   TAKES:
+     note --> the note to trigger
+*/
+int Instrument::trigger(const int note_const) {
+    if(this->voices[this->curr_voice]->is_triggered()) {
+        return 1; // No free voices
+    } else {
+        this->trigger_template(note_const);
+        this->voices[this->curr_voice]->trigger();
+        this->curr_voice++;
+        this->curr_voice %= this->voices.size();
+        return 0;
+    }
+}
+
+/*
+ Advance all voices.
+*/
+void Instrument::advance() {
+    int i;
+    this->advance_template();
+    // advance voices
+    for(i = 0; i < this->voices.size(); i++) {
+        this->voices[i]->advance(this->envelope->length);
+    }
+}
+
+/*
+ Calculates a note frequency
+   TAKES:
+     
+*/
+float WaveTableSynth::calculate_note(const int note_const) {
+    double base_hz = this->BASE_HZ[note_const % 12];
+    double octave = (double)(note_const / (int)12);
+    return (float)((base_hz * pow((double)2, octave)) / 110);
 }
 
 /*
@@ -65,27 +94,17 @@ WaveTableSynth::~WaveTableSynth() {
 }
 
 /*
- Trigger a note
-   TAKES:
-     note --> the note to trigger
+ WaveTableSynth override of trigger_template
 */
-int WaveTableSynth::trigger_note(const int note_const) {
-    if(this->voices[this->curr_voice]->is_triggered()) {
-        return 1; // No free voices
-    } else {
-        this->pitch_incrementers[this->curr_voice] = this->calculate_note(note_const);
-        this->voices[this->curr_voice]->trigger();
-        this->curr_voice++;
-        this->curr_voice %= this->voices.size();
-        return 0;
-    }
+void WaveTableSynth::trigger_template(const int note_const) {
+    this->pitch_incrementers[this->curr_voice] = this->calculate_note(note_const);
 }
 
 /*
- Advance all voices.
+ WaveTableSynth override of advance_template
 */
-void WaveTableSynth::advance() {
-    int i, v, c, x;
+void WaveTableSynth::advance_template() {
+    int v, c, x;
     // advance channel positions
     for(v = 0; v < this->voices.size(); v++) {
         for(c = 0; c < NUM_CHANNELS; c++) {
@@ -95,10 +114,6 @@ void WaveTableSynth::advance() {
                 this->wavetable_positions[x] -=  TABLE_SIZE;
             }
         }
-    }
-    // advance voices
-    for(i = 0; i < this->voices.size(); i++) {
-        this->voices[i]->advance(this->envelope->length);
     }
 }
 

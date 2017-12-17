@@ -153,85 +153,85 @@ void ShellController::process(bool *loop, void *daw, void *instrument) {
             envelope.
             */
         case '`':
-            inst->trigger_note(Instrument::GS2);
+            inst->trigger(Instrument::GS2);
             break;
         case '1':
-            inst->trigger_note(Instrument::A3);
+            inst->trigger(Instrument::A3);
             break;
         case 'q':
-            inst->trigger_note(Instrument::AS3);
+            inst->trigger(Instrument::AS3);
             break;
         case '2':
-            inst->trigger_note(Instrument::B3);
+            inst->trigger(Instrument::B3);
             break;
         case '3':
-            inst->trigger_note(Instrument::C3);
+            inst->trigger(Instrument::C3);
             break;
         case 'e':
-            inst->trigger_note(Instrument::CS3);
+            inst->trigger(Instrument::CS3);
             break;
         case '4':
-            inst->trigger_note(Instrument::D3);
+            inst->trigger(Instrument::D3);
             break;
         case 'r':
-            inst->trigger_note(Instrument::DS3);
+            inst->trigger(Instrument::DS3);
             break;
         case '5':
-            inst->trigger_note(Instrument::E3);
+            inst->trigger(Instrument::E3);
             break;
         case '6':
-            inst->trigger_note(Instrument::F3);
+            inst->trigger(Instrument::F3);
             break;
         case 'y':
-            inst->trigger_note(Instrument::FS3);
+            inst->trigger(Instrument::FS3);
             break;
         case '7':
-            inst->trigger_note(Instrument::G3);
+            inst->trigger(Instrument::G3);
             break;
         case 'u':
-            inst->trigger_note(Instrument::GS3);
+            inst->trigger(Instrument::GS3);
             break;
         case '8':
-            inst->trigger_note(Instrument::A4);
+            inst->trigger(Instrument::A4);
             break;
         case 'a':
-            inst->trigger_note(Instrument::A4);
+            inst->trigger(Instrument::A4);
             break;
         case 'z':
-            inst->trigger_note(Instrument::AS4);
+            inst->trigger(Instrument::AS4);
             break;
         case 's':
-            inst->trigger_note(Instrument::B4);
+            inst->trigger(Instrument::B4);
             break;
         case 'd':
-            inst->trigger_note(Instrument::C4);
+            inst->trigger(Instrument::C4);
             break;
         case 'c':
-            inst->trigger_note(Instrument::CS4);
+            inst->trigger(Instrument::CS4);
             break;
         case 'f':
-            inst->trigger_note(Instrument::D4);
+            inst->trigger(Instrument::D4);
             break;
         case 'v':
-            inst->trigger_note(Instrument::DS4);
+            inst->trigger(Instrument::DS4);
             break;
         case 'g':
-            inst->trigger_note(Instrument::E4);
+            inst->trigger(Instrument::E4);
             break;
         case 'h':
-            inst->trigger_note(Instrument::F4);
+            inst->trigger(Instrument::F4);
             break;
         case 'n':
-            inst->trigger_note(Instrument::FS4);
+            inst->trigger(Instrument::FS4);
             break;
         case 'j':
-            inst->trigger_note(Instrument::G4);
+            inst->trigger(Instrument::G4);
             break;
         case 'm':
-            inst->trigger_note(Instrument::GS4);
+            inst->trigger(Instrument::GS4);
             break;
         case 'k':
-            inst->trigger_note(Instrument::A5);
+            inst->trigger(Instrument::A5);
             break;
         // TIMBRE COMMANDS: Wavetable is rewritten to create a new timbre
         case 'A': // SINE WAVE
